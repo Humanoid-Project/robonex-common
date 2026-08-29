@@ -9,9 +9,12 @@ from .joints import JOINT_BY_MODEL_NAME, PASSIVE_CLOSED_LOOP_JOINTS
 @dataclass(frozen=True)
 class PolicyContract:
     schema_version: int
+    task: str
     policy_file: str
     policy_sha256: str
+    description_model: str
     joint_order: tuple[str, ...]
+    observation_terms: tuple[str, ...]
     action_offsets: tuple[float, ...]
     action_scales: tuple[float, ...]
     target_clips: tuple[tuple[float, float], ...]
@@ -21,14 +24,18 @@ class PolicyContract:
     policy_hz: float
     description_commit: str
     common_commit: str
+    training_commit: str
 
     @classmethod
     def from_dict(cls, data):
         contract = cls(
             schema_version=int(data["schema_version"]),
+            task=str(data["task"]),
             policy_file=str(data["policy_file"]),
             policy_sha256=str(data["policy_sha256"]),
+            description_model=str(data["description_model"]),
             joint_order=tuple(data["joint_order"]),
+            observation_terms=tuple(data["observation_terms"]),
             action_offsets=tuple(float(value) for value in data["action_offsets"]),
             action_scales=tuple(float(value) for value in data["action_scales"]),
             target_clips=tuple((float(bounds[0]), float(bounds[1])) for bounds in data["target_clips"]),
@@ -38,6 +45,7 @@ class PolicyContract:
             policy_hz=float(data["policy_hz"]),
             description_commit=str(data["description_commit"]),
             common_commit=str(data["common_commit"]),
+            training_commit=str(data["training_commit"]),
         )
         contract.validate()
         return contract
@@ -70,13 +78,18 @@ class PolicyContract:
             raise ValueError("runner_action_clip and policy_hz must be positive")
         if self.observation_size <= 0:
             raise ValueError("observation_size must be positive")
+        if not self.task or not self.description_model or not self.observation_terms:
+            raise ValueError("task, description_model, and observation_terms are required")
 
     def to_dict(self):
         return {
             "schema_version": self.schema_version,
+            "task": self.task,
             "policy_file": self.policy_file,
             "policy_sha256": self.policy_sha256,
+            "description_model": self.description_model,
             "joint_order": list(self.joint_order),
+            "observation_terms": list(self.observation_terms),
             "action_offsets": list(self.action_offsets),
             "action_scales": list(self.action_scales),
             "target_clips": [list(bounds) for bounds in self.target_clips],
@@ -86,6 +99,7 @@ class PolicyContract:
             "policy_hz": self.policy_hz,
             "description_commit": self.description_commit,
             "common_commit": self.common_commit,
+            "training_commit": self.training_commit,
         }
 
     def save(self, path):

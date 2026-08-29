@@ -4,6 +4,8 @@ import pytest
 
 from robonex_common.joints import ACTUATED_JOINTS, JOINT_BY_ID, PASSIVE_CLOSED_LOOP_JOINTS, POLICY_JOINT_ORDER
 from robonex_common.limits import action_normalization, joint_limit_for
+from robonex_common.can import Motor
+from robonex_common.motors import MOTOR_SPECS
 from robonex_common.policy import PolicyContract
 from robonex_common.protocol import build_arbitration_id, parse_arbitration_id
 
@@ -37,9 +39,12 @@ def test_arbitration_id_round_trip():
 def test_policy_contract_rejects_passive_joint(tmp_path):
     payload = {
         "schema_version": 1,
+        "task": "test",
         "policy_file": "policy.onnx",
         "policy_sha256": "0" * 64,
+        "description_model": "mujoco/scene.xml",
         "joint_order": ["l_knee_joint"],
+        "observation_terms": ["joint_pos"],
         "action_offsets": [0.0],
         "action_scales": [1.0],
         "target_clips": [[-1.0, 1.0]],
@@ -49,8 +54,20 @@ def test_policy_contract_rejects_passive_joint(tmp_path):
         "policy_hz": 50.0,
         "description_commit": "test",
         "common_commit": "test",
+        "training_commit": "test",
     }
     path = tmp_path / "manifest.json"
     path.write_text(json.dumps(payload), encoding="utf-8")
     with pytest.raises(ValueError):
         PolicyContract.load(path)
+
+
+def test_feedback_decoding_includes_mode_status():
+    motor = Motor(None, 1, MOTOR_SPECS["rs02"])
+    data16 = (2 << 14) | (5 << 8) | 1
+    payload = bytes.fromhex("8000800080000190")
+    result = motor.ingest_feedback(payload, data16=data16, now=12.5)
+    assert result[0] == 12.5
+    assert motor.last_mode_status == 2
+    assert motor.last_fault == (data16 >> 8) & 0xFF
+    assert motor.last_temp == 40.0

@@ -37,6 +37,7 @@ class Motor:
         self.last_torque = 0.0
         self.last_temp = 0.0
         self.last_fault = 0
+        self.last_mode_status = 0
         self.last_feedback_time = 0.0
 
     def _send(self, comm_type, data16, data):
@@ -156,6 +157,7 @@ class Motor:
         self.last_torque = uint_to_float(raw_torque, spec.t_min, spec.t_max, 16)
         self.last_temp = raw_temp / 10.0
         self.last_fault = (data16 >> 8) & 0xFF
+        self.last_mode_status = (data16 >> 14) & 0x03
         self.last_feedback_time = time.monotonic() if now is None else now
         return (
             self.last_feedback_time,
