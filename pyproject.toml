@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "robonex-common"
+version = "0.1.0"
+description = "Shared RoboNex robot, motor, CAN, and policy contracts"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "BSD-3-Clause"}
+authors = [{name = "Humanoid-Project"}]
+
+[project.optional-dependencies]
+can = ["python-can>=4.0"]
+test = ["pytest>=7.0"]
+
+[project.urls]
+Repository = "https://github.com/Humanoid-Project/robonex-common"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
