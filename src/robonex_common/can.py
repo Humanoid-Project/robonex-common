@@ -26,6 +26,13 @@ except ImportError:
     python_can = None
 
 
+def drain(bus):
+    dropped = 0
+    while bus.recv(timeout=0.0) is not None:
+        dropped += 1
+    return dropped
+
+
 class Motor:
     def __init__(self, bus, motor_id, spec, host_id=HOST_ID):
         self.bus = bus
@@ -156,7 +163,7 @@ class Motor:
         self.last_velocity = uint_to_float(raw_vel, spec.v_min, spec.v_max, 16)
         self.last_torque = uint_to_float(raw_torque, spec.t_min, spec.t_max, 16)
         self.last_temp = raw_temp / 10.0
-        self.last_fault = (data16 >> 8) & 0xFF
+        self.last_fault = (data16 >> 8) & 0x3F
         self.last_mode_status = (data16 >> 14) & 0x03
         self.last_feedback_time = time.monotonic() if now is None else now
         return (
@@ -170,9 +177,15 @@ class Motor:
 
     def poll_feedback(self, timeout=0.05):
         deadline = time.monotonic() + timeout
-        while time.monotonic() < deadline:
+        first = True
+        while first or time.monotonic() < deadline:
+            first = False
             msg = self.bus.recv(timeout=max(0.0, deadline - time.monotonic()))
-            if msg is None or not msg.is_extended_id:
+            if msg is None:
+                if timeout <= 0.0:
+                    return None
+                continue
+            if not msg.is_extended_id:
                 continue
             comm_type, data16, destination = parse_arbitration_id(msg.arbitration_id)
             if comm_type != COMM_FEEDBACK or destination != self.host_id or (data16 & 0xFF) != self.motor_id:

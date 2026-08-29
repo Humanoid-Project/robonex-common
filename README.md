@@ -30,7 +30,6 @@ robonex-common/
 
 ## Setup
 ```bash
-# Example
 cd ~/humanoid_project
 git clone https://github.com/Humanoid-Project/robonex-common.git
 python -m pip install -e ./robonex-common

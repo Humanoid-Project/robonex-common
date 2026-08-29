@@ -69,5 +69,5 @@ def test_feedback_decoding_includes_mode_status():
     result = motor.ingest_feedback(payload, data16=data16, now=12.5)
     assert result[0] == 12.5
     assert motor.last_mode_status == 2
-    assert motor.last_fault == (data16 >> 8) & 0xFF
+    assert motor.last_fault == 5
     assert motor.last_temp == 40.0

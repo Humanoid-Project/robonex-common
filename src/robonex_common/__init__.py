@@ -9,6 +9,7 @@ from .joints import (
     POLICY_JOINT_ORDER,
     JointSpec,
 )
+from .can import drain
 from .limits import DEFAULT_LIMIT_MARGIN_RAD, action_normalization, exceeds_joint_limit, joint_limit_for
 from .motors import MOTOR_CONTROL_KD, MOTOR_CONTROL_KP, MOTOR_PHYSICS, MOTOR_SPECS, MotorSpec
 
@@ -29,6 +30,7 @@ __all__ = [
     "JointSpec",
     "MotorSpec",
     "action_normalization",
+    "drain",
     "exceeds_joint_limit",
     "joint_limit_for",
 ]

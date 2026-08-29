@@ -3,7 +3,7 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
-from .joints import JOINT_BY_MODEL_NAME, PASSIVE_CLOSED_LOOP_JOINTS
+from .joints import JOINT_BY_MODEL_NAME, PASSIVE_CLOSED_LOOP_JOINTS, POLICY_JOINT_ORDER
 
 
 @dataclass(frozen=True)
@@ -66,6 +66,11 @@ class PolicyContract:
             raise ValueError("joint_order contains an unknown or passive joint")
         if any(name in PASSIVE_CLOSED_LOOP_JOINTS for name in self.joint_order):
             raise ValueError("policy must not target passive closed-loop joints")
+        if tuple(self.joint_order) != tuple(POLICY_JOINT_ORDER):
+            raise ValueError(
+                "joint_order must match POLICY_JOINT_ORDER exactly; "
+                "a permuted order swaps legs at deploy time without any error"
+            )
         if len(self.action_offsets) != self.action_size or len(self.action_scales) != self.action_size:
             raise ValueError("action normalization length differs from action_size")
         if len(self.target_clips) != self.action_size:
