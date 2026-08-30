@@ -14,8 +14,9 @@ robonex-common/
 │   ├── can.py
 │   └── policy.py
 ├── setup/
+│   ├── SETUP.md
 │   ├── setup.sh
-│   └── SETUP.md
+│   └── setup_isaacsim.sh
 └── tests/
     └── test_contracts.py
 ```

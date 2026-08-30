@@ -1,13 +1,14 @@
 # Setup
 
-Shared venv bootstrap for repos that clone `robonex-common` as a sibling.
+Shared venv bootstrap for repos that clone `robonex-common` as a sibling, plus the Isaac Sim/Isaac Lab conda bootstrap used by `robonex_balancing` and `robonex_description`.
 
 ## Structure
 
 ```text
 setup/
 ├── SETUP.md
-└── setup.sh
+├── setup.sh
+└── setup_isaacsim.sh
 ```
 
 ## Usage
@@ -32,3 +33,11 @@ Safe to re-run — every step is a no-op if already done.
 `robonex_description`, `Robstride-Motor-Test`, `robonex-deploy`.
 
 `robonex_balancing` uses `conda`, not this script.
+
+## `setup_isaacsim.sh`
+
+Creates the `isaacsim` conda env (Isaac Sim 5.1.0, Isaac Lab v2.3.2) used by `robonex_balancing` and `robonex_description`'s `isaac/` scripts. Same rules: **source, don't `bash`**, safe to re-run.
+
+```bash
+source ../robonex-common/setup/setup_isaacsim.sh
+```
