@@ -13,6 +13,9 @@ robonex-common/
 │   ├── protocol.py
 │   ├── can.py
 │   └── policy.py
+├── setup/
+│   ├── setup.sh
+│   └── SETUP.md
 └── tests/
     └── test_contracts.py
 ```
@@ -25,6 +28,8 @@ robonex-common/
 | `protocol` | CAN type/index constants, `build_arb` / `parse_arb` |
 | `can` | `Motor`, `FeedbackHub` |
 | `policy` | `PolicyContract` manifest read/write |
+
+`setup/setup.sh` is the shared venv bootstrap other repos source — see [`setup/SETUP.md`](setup/SETUP.md).
 
 <br>
 

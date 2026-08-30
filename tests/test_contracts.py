@@ -62,6 +62,44 @@ def test_policy_contract_rejects_passive_joint(tmp_path):
         PolicyContract.load(path)
 
 
+def _manifest_payload_for(joint_order):
+    offsets, scales, clips = action_normalization(0.01)
+    return {
+        "schema_version": 1,
+        "task": "test",
+        "policy_file": "policy.onnx",
+        "policy_sha256": "0" * 64,
+        "description_model": "mujoco/scene.xml",
+        "joint_order": list(joint_order),
+        "observation_terms": ["joint_pos"],
+        "action_offsets": [offsets[name] for name in joint_order],
+        "action_scales": [scales[name] for name in joint_order],
+        "target_clips": [list(clips[name]) for name in joint_order],
+        "runner_action_clip": 3.0,
+        "observation_size": 42,
+        "action_size": len(joint_order),
+        "policy_hz": 50.0,
+        "description_commit": "test",
+        "common_commit": "test",
+        "training_commit": "test",
+    }
+
+
+def test_policy_contract_accepts_correct_order(tmp_path):
+    path = tmp_path / "manifest.json"
+    path.write_text(json.dumps(_manifest_payload_for(POLICY_JOINT_ORDER)), encoding="utf-8")
+    contract = PolicyContract.load(path)
+    assert tuple(contract.joint_order) == tuple(POLICY_JOINT_ORDER)
+
+
+def test_policy_contract_rejects_permuted_order(tmp_path):
+    reversed_order = tuple(reversed(POLICY_JOINT_ORDER))
+    path = tmp_path / "manifest.json"
+    path.write_text(json.dumps(_manifest_payload_for(reversed_order)), encoding="utf-8")
+    with pytest.raises(ValueError, match="joint_order must match POLICY_JOINT_ORDER"):
+        PolicyContract.load(path)
+
+
 def test_feedback_decoding_includes_mode_status():
     motor = Motor(None, 1, MOTOR_SPECS["rs02"])
     data16 = (2 << 14) | (5 << 8) | 1

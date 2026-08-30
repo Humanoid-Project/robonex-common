@@ -5,3 +5,10 @@ __pycache__/
 .venv/
 build/
 dist/
+
+.vscode/
+.agents/
+.codex/
+.claude/
+.grok/
+AGENTS.md
