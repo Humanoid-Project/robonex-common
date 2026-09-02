@@ -6,11 +6,12 @@ fi
 
 declare -A ROBONEX_GITHUB_NAME=(
     ["robonex-common"]="robonex-common"
-    ["robonex_description"]="robonex_description"
-    ["Robstride-Motor-Test"]="Robstride-Motor-Test"
+    ["robonex-description"]="robonex-description"
+    ["robstride-motor-test"]="robstride-motor-test"
     ["IMU_N100_Test"]="imu-n100-test"
     ["robonex-deploy"]="robonex-deploy"
-    ["robonex_balancing"]="robonex-balancing"
+    ["robonex-balancing"]="robonex-balancing"
+    ["robonex-walking"]="robonex-walking"
 )
 
 _robonex_setup() {
