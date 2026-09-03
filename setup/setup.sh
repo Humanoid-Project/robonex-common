@@ -15,7 +15,7 @@ declare -A ROBONEX_GITHUB_NAME=(
 )
 
 _robonex_setup() {
-    local common_root humanoid_root repo_root repo slug target
+    local activated_venv common_root humanoid_root repo_root repo slug target venv_python
 
     common_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
     humanoid_root="$(dirname "$common_root")"
@@ -35,7 +35,25 @@ _robonex_setup() {
         fi
     done
 
-    if [ ! -d "$repo_root/.venv" ]; then
+    if [ -d "$repo_root/.venv" ]; then
+        if [ ! -x "$repo_root/.venv/bin/python" ] || [ ! -f "$repo_root/.venv/bin/activate" ]; then
+            echo "[setup] ERROR: $repo_root/.venv is incomplete" >&2
+            echo "[setup] Recreate this venv, then source setup.sh again." >&2
+            return 1
+        fi
+        activated_venv="$(
+            unset VIRTUAL_ENV
+            source "$repo_root/.venv/bin/activate" >/dev/null 2>&1 || exit 1
+            printf '%s' "${VIRTUAL_ENV:-}"
+        )"
+        if [ "$activated_venv" != "$repo_root/.venv" ]; then
+            echo "[setup] ERROR: .venv was created for a different repository path:" >&2
+            echo "  ${activated_venv:-unknown}" >&2
+            echo "[setup] Expected: $repo_root/.venv" >&2
+            echo "[setup] Recreate this venv after moving or renaming the repository." >&2
+            return 1
+        fi
+    else
         echo "[setup] creating venv..."
         if ! python3 -m venv "$repo_root/.venv"; then
             echo "[setup] ERROR: venv creation failed" >&2
@@ -43,17 +61,18 @@ _robonex_setup() {
         fi
     fi
     source "$repo_root/.venv/bin/activate"
+    venv_python="$repo_root/.venv/bin/python"
 
     if [ -f "$repo_root/requirements.txt" ]; then
         echo "[setup] installing requirements.txt..."
-        if ! pip install -r "$repo_root/requirements.txt"; then
+        if ! "$venv_python" -m pip install -r "$repo_root/requirements.txt"; then
             echo "[setup] ERROR: requirements.txt install failed" >&2
             return 1
         fi
     fi
 
     echo "[setup] installing robonex-common (editable)..."
-    if ! pip install -e "$common_root"; then
+    if ! "$venv_python" -m pip install -e "$common_root"; then
         echo "[setup] ERROR: robonex-common install failed" >&2
         return 1
     fi
