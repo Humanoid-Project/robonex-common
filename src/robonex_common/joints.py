@@ -60,3 +60,10 @@ PASSIVE_CLOSED_LOOP_JOINTS = (
     "l_ankle_pitch_joint",
     "r_ankle_pitch_joint",
 )
+
+
+def channel_for_motor_id(motor_id):
+    joint = JOINT_BY_ID.get(motor_id)
+    if joint is None:
+        raise ValueError(f"No CAN channel for motor ID {motor_id}")
+    return joint.channel

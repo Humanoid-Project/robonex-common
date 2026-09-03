@@ -56,5 +56,20 @@ def parse_arbitration_id(arbitration_id):
     )
 
 
-build_arb = build_arbitration_id
-parse_arb = parse_arbitration_id
+FAULT_BIT_NAMES = {
+    0: "Overtemperature (>145C)",
+    1: "Driver chip fault",
+    2: "Undervoltage (<12V)",
+    3: "Overvoltage (>60V)",
+    4: "Phase B overcurrent",
+    5: "Phase C overcurrent",
+    7: "Encoder not calibrated",
+    8: "Hardware identification fault",
+    9: "Position initialization fault",
+    14: "Stall overload",
+    16: "Phase A overcurrent",
+}
+
+
+def decode_fault_bits(value):
+    return [name for bit, name in FAULT_BIT_NAMES.items() if value & (1 << bit)]

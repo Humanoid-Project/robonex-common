@@ -108,12 +108,6 @@ class Motor:
     def write_param_u8(self, index, value):
         self.write_parameter_u8(index, value)
 
-    def write_param_u16(self, index, value):
-        self.write_parameter_u16(index, value)
-
-    def write_param_f32(self, index, value):
-        self.write_parameter_f32(index, value)
-
     def set_active_report(self, enable):
         data = bytearray(8)
         data[0] = 1 if enable else 0
