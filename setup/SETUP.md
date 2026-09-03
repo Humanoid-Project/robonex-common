@@ -1,71 +1,82 @@
 # Setup
 
-Shared venv bootstrap for repos that clone `robonex-common` as a sibling, plus the Isaac Sim/Isaac Lab conda bootstrap used by `robonex-balancing` and `robonex-description`.
-
 ## Structure
 
 ```text
 setup/
 ├── SETUP.md
-├── setup.sh
+├── release.sh
 └── setup_isaacsim.sh
 ```
 
-## Usage
+<br>
+
+## Installing `robonex-common`
+
+Always the published tag — never a local checkout. Each repo pins it in its own
+`requirements.txt`, so a plain `pip install -r requirements.txt` brings it in.
 
 ```bash
-source ../robonex-common/setup/setup.sh [sibling-repo ...]
-```
-
-Must be `source`d, not `bash`ed — activates `.venv` in the caller's shell.
-
-| Step | Behavior |
-| --- | --- |
-| Clone each named sibling repo | Skipped if already present |
-| Create `.venv` | Skipped if already present; always activated |
-| `pip install -r requirements.txt` | Only if the file exists |
-| `pip install -e ../robonex-common` | Always last |
-
-If a repository directory was moved or renamed, recreate its `.venv` before
-running the setup again. Python virtual environments contain absolute paths and
-are not portable between repository paths. The setup stops with an error when
-it detects such a moved environment instead of falling back to a system `pip`.
-
-Safe to re-run — every step is a no-op if already done.
-
-## Library-only install (no clone)
-
-Anyone who only needs the shared contracts — joint IDs and limits, motor specs,
-the CAN protocol, `Motor`/`FeedbackHub`, the policy manifest — installs the
-published tag instead of cloning. `setup.sh` is not involved.
-
-```bash
+# Example
 pip install "robonex-common @ git+https://github.com/Humanoid-Project/robonex-common.git@v0.1.0"
 
 pip install "robonex-common[can] @ git+https://github.com/Humanoid-Project/robonex-common.git@v0.1.0"
-pip install "robonex-common[policy] @ git+https://github.com/Humanoid-Project/robonex-common.git@v0.1.0"
+pip install "robonex-common[can,policy] @ git+https://github.com/Humanoid-Project/robonex-common.git@v0.1.0"
 ```
 
 | Extra | Pulls in | Needed for |
 | --- | --- | --- |
-| (none) | nothing | joints, limits, motor specs, protocol constants, paths |
-| `can` | `python-can` | `Motor`, `FeedbackHub` on a real bus |
-| `policy` | `numpy` | `ActionPipeline`, `assemble_observation` |
+| (none) | - | `joints`, `motors`, `actuators`, `limits`, `protocol`, `imu`, `paths`, `policy` |
+| `can` | `python-can` | `Motor` / `FeedbackHub` on a real bus |
+| `policy` | `numpy` | `ActionPipeline` / `assemble_observation` |
 
-Never combine this with `pip install -e ../robonex-common` in the same
-environment — whichever `pip` ran last silently wins. Clone plus editable is the
-developer path; the pinned tag is the consumer path.
+| Repo | Pin | Environment |
+| --- | --- | --- |
+| `robonex-description` | `robonex-common` | `.venv` |
+| `robstride-motor-test` | `robonex-common[can]` | `.venv` |
+| `robonex-deploy` | `robonex-common[can,policy]` | `.venv` |
+| `robonex-balancing` | `robonex-common` | conda `isaacsim` |
+| `robonex-walking` | `robonex-common` | conda `isaacsim` |
 
-## Used by
+<br>
 
-`robonex-description`, `robstride-motor-test`, `robonex-deploy`.
+## `release.sh`
 
-`robonex-balancing` uses `conda`, not this script.
+Publishes a new `robonex-common` version and refreshes every dependent checkout.
+Add the changelog entry first.
+
+```bash
+# Example
+cd ~/humanoid_project/robonex-common
+./setup/release.sh 0.2.0
+
+./setup/release.sh 0.2.0 --no-push
+```
+
+| Option | Required | Default | Description |
+| --- | :---: | --- | --- |
+| `version` | Yes | - | `MAJOR.MINOR.PATCH`, must be newer than the current one |
+| `--no-push` | No | Off | Commit and tag locally, skip push and reinstall |
+
+| Step | Behavior |
+| --- | --- |
+| Bump `pyproject.toml` and `__init__.__version__` | Fails if the version is not newer |
+| Run the test suite | Aborts before any commit on failure |
+| Rewrite every pin to the new tag | `requirements.txt` and `README.md` across all repos |
+| Commit, tag `v<version>`, push | Skipped with `--no-push` |
+| Reinstall into each repo's `.venv` | Skipped for a repo with no `.venv` |
+
+The conda env `isaacsim` is not touched; reinstall there yourself.
+
+<br>
 
 ## `setup_isaacsim.sh`
 
-Creates the `isaacsim` conda env (Isaac Sim 5.1.0, Isaac Lab v2.3.2) used by `robonex-balancing` and `robonex-description`'s `isaac/` scripts. Same rules: **source, don't `bash`**, safe to re-run.
+Creates the `isaacsim` conda env (Isaac Sim 5.1.0, Isaac Lab v2.3.2) used by
+`robonex-balancing` and `robonex-walking`. Must be `source`d, not `bash`ed.
 
 ```bash
-source ../robonex-common/setup/setup_isaacsim.sh
+# Example
+cd ~/humanoid_project
+source ./robonex-common/setup/setup_isaacsim.sh
 ```

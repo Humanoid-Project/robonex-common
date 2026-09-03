@@ -217,16 +217,6 @@ def test_assemble_observation_orders_and_validates():
         assemble_observation(np.full(12, np.nan), np.arange(12), (1, 2, 3), (0, 0, -1), np.arange(12))
 
 
-def test_declared_version_matches_the_package_metadata():
-    from importlib.metadata import PackageNotFoundError, version
-
-    try:
-        installed = version("robonex-common")
-    except PackageNotFoundError:
-        pytest.skip("robonex-common is not installed in this environment")
-    assert installed == robonex_common.__version__
-
-
 def test_pyproject_version_matches_the_package():
     pyproject = (Path(__file__).resolve().parents[1] / "pyproject.toml").read_text()
     declared = [

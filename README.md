@@ -20,10 +20,11 @@ robonex-common/
 │   └── runtime.py
 ├── setup/
 │   ├── SETUP.md
-│   ├── setup.sh
+│   ├── release.sh
 │   └── setup_isaacsim.sh
 └── tests/
-    └── test_contracts.py
+    ├── test_contracts.py
+    └── test_modules.py
 ```
 
 | Module | Contents | Extra |
@@ -43,12 +44,14 @@ robonex-common/
 
 ## Install
 
+No checkout required — install the published tag.
+
 ```bash
 # Example
 pip install "robonex-common @ git+https://github.com/Humanoid-Project/robonex-common.git@v0.1.0"
 
 pip install "robonex-common[can] @ git+https://github.com/Humanoid-Project/robonex-common.git@v0.1.0"
-pip install "robonex-common[policy] @ git+https://github.com/Humanoid-Project/robonex-common.git@v0.1.0"
+pip install "robonex-common[can,policy] @ git+https://github.com/Humanoid-Project/robonex-common.git@v0.1.0"
 ```
 
 | Extra | Pulls in | Needed for |
@@ -59,16 +62,22 @@ pip install "robonex-common[policy] @ git+https://github.com/Humanoid-Project/ro
 
 <br>
 
-## Develop
+## Release
+
+Add the changelog entry, then publish and refresh every dependent checkout in one step.
+See [`setup/SETUP.md`](setup/SETUP.md).
 
 ```bash
 # Example
 cd ~/humanoid_project
 git clone https://github.com/Humanoid-Project/robonex-common.git
-python -m pip install -e ./robonex-common
-```
+cd robonex-common
+python3 -m venv .venv
+source .venv/bin/activate
+pip install pytest numpy
 
-`setup/setup.sh` is the shared venv bootstrap the sibling repos source — see [`setup/SETUP.md`](setup/SETUP.md).
+./setup/release.sh 0.2.0
+```
 
 <br>
 
@@ -77,5 +86,5 @@ python -m pip install -e ./robonex-common
 ```bash
 # Example
 cd ~/humanoid_project/robonex-common
-python -m pytest -q
+PYTHONPATH=src python -m pytest -q
 ```
