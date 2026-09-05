@@ -153,7 +153,7 @@ def _contract():
         task="test",
         policy_file="p.onnx",
         policy_sha256="0" * 64,
-        description_model="mujoco/scene.xml",
+        description_model="mujoco/basic/scene.xml",
         joint_order=POLICY_JOINT_ORDER,
         observation_terms=("joint_pos_rel:12",),
         action_offsets=tuple(offsets[n] for n in POLICY_JOINT_ORDER),
