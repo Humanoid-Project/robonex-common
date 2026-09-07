@@ -25,9 +25,10 @@ def test_action_normalization_reaches_margin_clips():
 
 
 def test_joint_limit_margin_is_validated():
-    assert joint_limit_for(3) == pytest.approx((-1.047198 + 0.05, 0.087266 - 0.05))
+    joint = JOINT_BY_ID[3]
+    assert joint_limit_for(3) == pytest.approx((joint.lower + 0.05, joint.upper - 0.05))
     with pytest.raises(ValueError):
-        joint_limit_for(3, margin=1.0)
+        joint_limit_for(3, margin=(joint.upper - joint.lower))
 
 
 def test_arbitration_id_round_trip():

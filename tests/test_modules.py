@@ -41,18 +41,18 @@ def test_runtime_reports_the_missing_policy_extra():
 
 
 MEASURED_JOINTS = {
-    1: ("l_hip_yaw_joint", "rs02", "can0", -0.698132, 0.698132),
-    2: ("l_hip_pitch_joint", "rs03", "can0", -0.872665, 0.872665),
-    3: ("l_hip_roll_joint", "rs03", "can0", -1.047198, 0.087266),
-    4: ("l_knee_pitch_joint", "rs03", "can0", -0.872665, 0.087266),
-    5: ("l_ankle_upper_joint", "rs02", "can0", -0.610865, 0.436332),
-    6: ("l_ankle_lower_joint", "rs02", "can0", -0.436332, 0.610865),
-    7: ("r_hip_yaw_joint", "rs02", "can1", -0.698132, 0.698132),
-    8: ("r_hip_pitch_joint", "rs03", "can1", -0.872665, 0.872665),
-    9: ("r_hip_roll_joint", "rs03", "can1", -0.087266, 1.047198),
-    10: ("r_knee_pitch_joint", "rs03", "can1", -0.087266, 0.872665),
-    11: ("r_ankle_upper_joint", "rs02", "can1", -0.436332, 0.610865),
-    12: ("r_ankle_lower_joint", "rs02", "can1", -0.610865, 0.436332),
+    1: ("l_hip_yaw_joint", "rs02", "can0", -1.658063, 1.658063),
+    2: ("l_hip_pitch_joint", "rs03", "can0", -1.745329, 1.745329),
+    3: ("l_hip_roll_joint", "rs03", "can0", -2.146755, 0.453786),
+    4: ("l_knee_pitch_joint", "rs03", "can0", -1.500983, 0.942478),
+    5: ("l_ankle_upper_joint", "rs02", "can0", -0.610865, 0.575959),
+    6: ("l_ankle_lower_joint", "rs02", "can0", -0.610865, 0.575959),
+    7: ("r_hip_yaw_joint", "rs02", "can1", -1.658063, 1.658063),
+    8: ("r_hip_pitch_joint", "rs03", "can1", -1.745329, 1.745329),
+    9: ("r_hip_roll_joint", "rs03", "can1", -0.453786, 2.146755),
+    10: ("r_knee_pitch_joint", "rs03", "can1", -0.942478, 1.500983),
+    11: ("r_ankle_upper_joint", "rs02", "can1", -0.575959, 0.610865),
+    12: ("r_ankle_lower_joint", "rs02", "can1", -0.575959, 0.610865),
 }
 MEASURED_PHYSICS = {
     "rs02": (0.0042, 0.1),
@@ -75,11 +75,34 @@ def test_joint_table_matches_the_measured_hardware():
         channel_for_motor_id(99)
 
 
-def test_right_ankle_limits_are_the_crossed_mirror_of_the_left():
-    left_upper, left_lower = JOINT_BY_ID[5], JOINT_BY_ID[6]
-    right_upper, right_lower = JOINT_BY_ID[11], JOINT_BY_ID[12]
-    assert (right_upper.lower, right_upper.upper) == pytest.approx((left_lower.lower, left_lower.upper))
-    assert (right_lower.lower, right_lower.upper) == pytest.approx((left_upper.lower, left_upper.upper))
+def test_joint_limits_match_the_description_urdf():
+    try:
+        description = resolve_repo(("robonex-description",), "ROBONEX_DESCRIPTION_ROOT")
+    except Exception:
+        pytest.skip("robonex-description checkout not available")
+    urdf = description / "urdf/robonex.urdf"
+    if not urdf.is_file():
+        pytest.skip("urdf/robonex.urdf not found")
+    import xml.etree.ElementTree as ET
+
+    limits = {}
+    for joint in ET.parse(urdf).getroot().findall("joint"):
+        limit = joint.find("limit")
+        if limit is not None:
+            limits[joint.get("name")] = (float(limit.get("lower")), float(limit.get("upper")))
+    for joint in ACTUATED_JOINTS:
+        assert joint.model_name in limits, joint.model_name
+        assert (joint.lower, joint.upper) == pytest.approx(limits[joint.model_name], abs=1e-6), joint.model_name
+
+
+def test_every_right_joint_is_the_sign_mirror_of_its_left_counterpart():
+    by_name = {joint.model_name: joint for joint in ACTUATED_JOINTS}
+    pairs = [(name, "r_" + name[2:]) for name in by_name if name.startswith("l_")]
+    assert len(pairs) == 6
+    for left_name, right_name in pairs:
+        left, right = by_name[left_name], by_name[right_name]
+        assert (right.lower, right.upper) == pytest.approx((-left.upper, -left.lower)), left_name
+        assert left.motor_model == right.motor_model
 
 
 def test_actuator_parameters_carry_the_measured_gains_and_physics():

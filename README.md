@@ -48,10 +48,10 @@ No checkout required — install the published tag.
 
 ```bash
 # Example
-pip install "robonex-common @ git+https://github.com/Humanoid-Project/robonex-common.git@v0.1.0"
+pip install "robonex-common @ git+https://github.com/Humanoid-Project/robonex-common.git@v0.2.0"
 
-pip install "robonex-common[can] @ git+https://github.com/Humanoid-Project/robonex-common.git@v0.1.0"
-pip install "robonex-common[can,policy] @ git+https://github.com/Humanoid-Project/robonex-common.git@v0.1.0"
+pip install "robonex-common[can] @ git+https://github.com/Humanoid-Project/robonex-common.git@v0.2.0"
+pip install "robonex-common[can,policy] @ git+https://github.com/Humanoid-Project/robonex-common.git@v0.2.0"
 ```
 
 | Extra | Pulls in | Needed for |
