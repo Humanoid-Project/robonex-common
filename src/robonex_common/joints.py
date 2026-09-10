@@ -32,6 +32,20 @@ JOINT_BY_MODEL_NAME = {joint.model_name: joint for joint in ACTUATED_JOINTS}
 JOINT_BY_HARDWARE_NAME = {joint.hardware_name: joint for joint in ACTUATED_JOINTS}
 JOINT_LIMITS_BY_ID = {joint.motor_id: (joint.lower, joint.upper) for joint in ACTUATED_JOINTS}
 JOINT_LIMITS_BY_NAME = {joint.model_name: (joint.lower, joint.upper) for joint in ACTUATED_JOINTS}
+DEFAULT_JOINT_POS = {
+    "l_hip_yaw_joint": 0.0,
+    "l_hip_pitch_joint": 0.1,
+    "l_hip_roll_joint": 0.0,
+    "l_knee_pitch_joint": -0.38578,
+    "l_ankle_upper_joint": 0.2056595,
+    "l_ankle_lower_joint": -0.2056595,
+    "r_hip_yaw_joint": 0.0,
+    "r_hip_pitch_joint": -0.1,
+    "r_hip_roll_joint": 0.0,
+    "r_knee_pitch_joint": 0.38578,
+    "r_ankle_upper_joint": -0.2056595,
+    "r_ankle_lower_joint": 0.2056595,
+}
 CHANNEL_MOTOR_IDS = {
     "can0": tuple(joint.motor_id for joint in ACTUATED_JOINTS if joint.channel == "can0"),
     "can1": tuple(joint.motor_id for joint in ACTUATED_JOINTS if joint.channel == "can1"),

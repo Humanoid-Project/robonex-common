@@ -1,4 +1,4 @@
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 from .actuators import ACTUATOR_PARAMETERS
 from .can import FeedbackHub, Motor, drain
@@ -11,6 +11,7 @@ from .imu import (
 from .joints import (
     ACTUATED_JOINTS,
     CHANNEL_MOTOR_IDS,
+    DEFAULT_JOINT_POS,
     JOINT_BY_HARDWARE_NAME,
     JOINT_BY_ID,
     JOINT_BY_MODEL_NAME,
@@ -22,7 +23,11 @@ from .joints import (
     channel_for_motor_id,
 )
 from .limits import (
+    ACTION_SCALE_RAD,
+    DEFAULT_ACTION_MARGIN_RAD,
     DEFAULT_LIMIT_MARGIN_RAD,
+    RUNNER_ACTION_CLIP,
+    action_limit_reach,
     action_normalization,
     exceeds_joint_limit,
     joint_limit_for,
@@ -64,14 +69,17 @@ from .protocol import (
 )
 
 __all__ = [
+    "ACTION_SCALE_RAD",
     "ACTUATED_JOINTS",
     "ACTUATOR_PARAMETERS",
     "BALANCING_REPO_NAMES",
     "CHANNEL_MOTOR_IDS",
     "COMMON_REPO_NAMES",
+    "DEFAULT_ACTION_MARGIN_RAD",
     "DEFAULT_IMU_BAUDRATE",
     "DEFAULT_IMU_PORT",
     "DEFAULT_INTERFACE",
+    "DEFAULT_JOINT_POS",
     "DEFAULT_LIMIT_MARGIN_RAD",
     "DEFAULT_VELOCITY_ACCELERATION",
     "DEFAULT_VELOCITY_LIMIT_CURRENT",
@@ -100,8 +108,10 @@ __all__ = [
     "POLICY_JOINT_ORDER",
     "PolicyContract",
     "RATED_TORQUE",
+    "RUNNER_ACTION_CLIP",
     "WALKING_REPO_NAMES",
     "__version__",
+    "action_limit_reach",
     "action_normalization",
     "build_arbitration_id",
     "channel_for_motor_id",

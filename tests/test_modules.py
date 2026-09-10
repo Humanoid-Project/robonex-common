@@ -7,7 +7,7 @@ import pytest
 import robonex_common
 from robonex_common.actuators import ACTUATOR_PARAMETERS
 from robonex_common.imu import DEFAULT_IMU_BAUDRATE, DEFAULT_IMU_PORT, MOUNT_ROLL_DEG
-from robonex_common.joints import ACTUATED_JOINTS, JOINT_BY_ID, channel_for_motor_id
+from robonex_common.joints import ACTUATED_JOINTS, DEFAULT_JOINT_POS, JOINT_BY_ID, channel_for_motor_id
 from robonex_common.motors import MOTOR_CONTROL_KD, MOTOR_CONTROL_KP, MOTOR_PHYSICS
 from robonex_common.paths import resolve_repo
 from robonex_common.protocol import FAULT_BIT_NAMES, decode_fault_bits
@@ -105,6 +105,26 @@ def test_every_right_joint_is_the_sign_mirror_of_its_left_counterpart():
         assert left.motor_model == right.motor_model
 
 
+def test_standing_pose_is_inside_every_joint_limit():
+    assert set(DEFAULT_JOINT_POS) == {joint.model_name for joint in ACTUATED_JOINTS}
+    for joint in ACTUATED_JOINTS:
+        default = DEFAULT_JOINT_POS[joint.model_name]
+        assert joint.lower < default < joint.upper, joint.model_name
+    for joint in ACTUATED_JOINTS:
+        if joint.model_name.startswith("l_"):
+            mirror = DEFAULT_JOINT_POS["r_" + joint.model_name[2:]]
+            assert DEFAULT_JOINT_POS[joint.model_name] == pytest.approx(-mirror)
+
+
+def test_standing_pose_is_the_mildly_bent_policy_reference():
+    assert DEFAULT_JOINT_POS["l_hip_yaw_joint"] == 0.0
+    assert DEFAULT_JOINT_POS["l_hip_roll_joint"] == 0.0
+    assert DEFAULT_JOINT_POS["l_hip_pitch_joint"] == pytest.approx(0.1)
+    assert DEFAULT_JOINT_POS["l_knee_pitch_joint"] == pytest.approx(-0.38578)
+    assert DEFAULT_JOINT_POS["l_ankle_upper_joint"] == pytest.approx(0.2056595)
+    assert DEFAULT_JOINT_POS["l_ankle_lower_joint"] == pytest.approx(-0.2056595)
+
+
 def test_actuator_parameters_carry_the_measured_gains_and_physics():
     stiffness, damping = MEASURED_GAINS
     assert (MOTOR_CONTROL_KP, MOTOR_CONTROL_KD) == pytest.approx(MEASURED_GAINS)
@@ -166,23 +186,26 @@ np = pytest.importorskip("numpy")
 
 
 def _contract():
-    from robonex_common.limits import action_normalization
+    from robonex_common.limits import RUNNER_ACTION_CLIP, action_normalization
     from robonex_common.joints import POLICY_JOINT_ORDER
     from robonex_common.policy import PolicyContract
 
     offsets, scales, clips = action_normalization(0.01)
     return PolicyContract(
-        schema_version=1,
+        schema_version=2,
         task="test",
         policy_file="p.onnx",
         policy_sha256="0" * 64,
-        description_model="mujoco/basic/scene.xml",
+        description_sha256="1" * 64,
+        common_sha256="2" * 64,
+        training_sha256="3" * 64,
+        description_model="mujoco/robot/scene.xml",
         joint_order=POLICY_JOINT_ORDER,
         observation_terms=("joint_pos_rel:12",),
         action_offsets=tuple(offsets[n] for n in POLICY_JOINT_ORDER),
         action_scales=tuple(scales[n] for n in POLICY_JOINT_ORDER),
         target_clips=tuple(clips[n] for n in POLICY_JOINT_ORDER),
-        runner_action_clip=3.0,
+        runner_action_clip=RUNNER_ACTION_CLIP,
         observation_size=42,
         action_size=12,
         policy_hz=50.0,
@@ -196,8 +219,10 @@ def test_action_pipeline_clips_at_both_stages():
     from robonex_common.runtime import ActionPipeline
 
     pipeline = ActionPipeline(_contract())
+    from robonex_common.limits import RUNNER_ACTION_CLIP
+
     clipped, targets = pipeline.apply(np.full(12, 50.0, dtype=np.float32))
-    assert np.all(clipped == 3.0)
+    assert np.all(clipped == RUNNER_ACTION_CLIP)
     assert np.all(targets <= np.asarray([pair[1] for pair in _contract().target_clips]) + 1e-6)
     assert pipeline.policy_call_count == 1
     assert pipeline.runner_clip_count == 12

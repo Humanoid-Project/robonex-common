@@ -1,7 +1,23 @@
-from .joints import JOINT_LIMITS_BY_ID, JOINT_LIMITS_BY_NAME
+from .joints import DEFAULT_JOINT_POS, JOINT_LIMITS_BY_ID, JOINT_LIMITS_BY_NAME
 
 
 DEFAULT_LIMIT_MARGIN_RAD = 0.05
+DEFAULT_ACTION_MARGIN_RAD = 0.01
+ACTION_SCALE_RAD = {
+    "l_hip_yaw_joint": 0.12,
+    "l_hip_pitch_joint": 0.25,
+    "l_hip_roll_joint": 0.25,
+    "l_knee_pitch_joint": 0.25,
+    "l_ankle_upper_joint": 0.15,
+    "l_ankle_lower_joint": 0.15,
+    "r_hip_yaw_joint": 0.12,
+    "r_hip_pitch_joint": 0.25,
+    "r_hip_roll_joint": 0.25,
+    "r_knee_pitch_joint": 0.25,
+    "r_ankle_upper_joint": 0.15,
+    "r_ankle_lower_joint": 0.15,
+}
+RUNNER_ACTION_CLIP = 14.0
 
 
 def joint_limit_for(motor_id, margin=DEFAULT_LIMIT_MARGIN_RAD):
@@ -16,7 +32,7 @@ def exceeds_joint_limit(position, motor_id, margin=DEFAULT_LIMIT_MARGIN_RAD):
     return position <= lower or position >= upper
 
 
-def action_normalization(margin=0.01):
+def action_normalization(margin=DEFAULT_ACTION_MARGIN_RAD):
     offsets = {}
     scales = {}
     clips = {}
@@ -25,7 +41,22 @@ def action_normalization(margin=0.01):
         clip_upper = upper - margin
         if margin < 0.0 or clip_lower >= clip_upper:
             raise ValueError(f"invalid action margin for {name}: {margin}")
-        offsets[name] = (clip_lower + clip_upper) * 0.5
-        scales[name] = (clip_upper - clip_lower) * 0.5
+        default = DEFAULT_JOINT_POS[name]
+        if not clip_lower <= default <= clip_upper:
+            raise ValueError(f"default pose for {name} is outside its clipped range: {default}")
+        scale = ACTION_SCALE_RAD[name]
+        if scale <= 0.0:
+            raise ValueError(f"invalid action scale for {name}: {scale}")
+        offsets[name] = default
+        scales[name] = scale
         clips[name] = (clip_lower, clip_upper)
     return offsets, scales, clips
+
+
+def action_limit_reach(margin=DEFAULT_ACTION_MARGIN_RAD):
+    offsets, scales, clips = action_normalization(margin)
+    return {
+        name: ((clips[name][0] - offsets[name]) / scales[name],
+               (clips[name][1] - offsets[name]) / scales[name])
+        for name in clips
+    }

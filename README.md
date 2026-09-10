@@ -37,7 +37,7 @@ robonex-common/
 | `can` | `Motor`, `FeedbackHub`, `drain` | `can` |
 | `imu` | N100 port/baudrate, `MOUNT_ROLL_DEG` | - |
 | `paths` | `resolve_repo`, `repo_file`, `description_model`, `git_commit` | - |
-| `policy` | `PolicyContract` manifest read/write, `sha256_file` | - |
+| `policy` | `PolicyContract` manifest read/write, policy/model/source SHA-256 | - |
 | `runtime` | `ActionPipeline`, `assemble_observation` | `policy` |
 
 <br>
@@ -48,10 +48,10 @@ No checkout required — install the published tag.
 
 ```bash
 # Example
-pip install "robonex-common @ git+https://github.com/Humanoid-Project/robonex-common.git@v0.2.0"
+pip install "robonex-common @ git+https://github.com/Humanoid-Project/robonex-common.git@v0.3.0"
 
-pip install "robonex-common[can] @ git+https://github.com/Humanoid-Project/robonex-common.git@v0.2.0"
-pip install "robonex-common[can,policy] @ git+https://github.com/Humanoid-Project/robonex-common.git@v0.2.0"
+pip install "robonex-common[can] @ git+https://github.com/Humanoid-Project/robonex-common.git@v0.3.0"
+pip install "robonex-common[can,policy] @ git+https://github.com/Humanoid-Project/robonex-common.git@v0.3.0"
 ```
 
 | Extra | Pulls in | Needed for |

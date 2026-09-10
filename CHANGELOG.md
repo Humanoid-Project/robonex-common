@@ -15,6 +15,63 @@ Bump `pyproject.toml` `version` and `__init__.__version__` in the same commit as
 
 <br>
 
+## 0.3.0 — 2026-09-08
+
+`action_normalization()` no longer normalizes against the joint range. It now maps
+the policy action relative to the standing pose with a fixed per-joint step size,
+the convention used by every published humanoid sim-to-real stack (Unitree G1's
+`unitree_rl_gym` is `target = default_joint_angles + 0.25 * action`).
+
+| | 0.2.0 | 0.3.0 |
+| --- | --- | --- |
+| `offset` | `(clip_lo + clip_hi) / 2` | `DEFAULT_JOINT_POS[name]` |
+| `scale` | `(clip_hi - clip_lo) / 2` | `ACTION_SCALE_RAD[name]` |
+| `clip` | `(lo + margin, hi - margin)` | unchanged |
+| `a = 0` commands | the midpoint of the joint range | the standing pose |
+| `\|a\| = 1` spans | the whole joint range | 7-25 % of it |
+| joint limit reached at | `\|a\| = 1` | `\|a\|` up to 13.73 |
+
+Under 0.2.0 an asymmetric joint put its near mechanical limit at `a = 1` while the
+standing pose sat at a non-zero action (hip_roll `a = 0.651`), so a policy with
+`sigma = 0.3` crossed the clip on 13 % of steps and every action unit was a
+different number of radians per joint (hip_roll 73.9 deg, hip_yaw 95.0 deg). Under
+0.3.0 the standing pose is `a = 0` for every joint, one action unit is a fixed
+small angle, and the nearest limit sits 1.78 action units away instead of 1.00.
+
+`PolicyContract.validate()` now rejects a manifest whose `action_offsets`, `action_scales`
+or `target_clips` disagree with the current `action_normalization()`. Before this, a manifest
+written under an older mapping loaded without complaint and commanded different joint angles
+on the real robot; `joint_order` was checked but the numbers that decide the actual target
+were not. `runner_action_clip` is deliberately not checked — it is a training hyperparameter,
+and a smaller clip is self-consistent rather than a wrong-target hazard.
+
+Manifest schema 2 records SHA-256 fingerprints for the complete MuJoCo XML/mesh bundle,
+the `robonex-common` Python source, and the training package/scripts in addition to the
+policy file. Deployment verifies the model bundle and common source before simulation,
+so an uncommitted source or generated-model change can no longer hide behind an unchanged
+Git commit.
+
+| Added | Contents |
+| --- | --- |
+| `joints.DEFAULT_JOINT_POS` | Mildly bent policy standing pose; hardware and URDF mechanical zero remain all zero |
+| `limits.ACTION_SCALE_RAD` | Radians per action unit. hip_yaw 0.12, hip_pitch/roll/knee 0.25, ankle 0.15 |
+| `limits.DEFAULT_ACTION_MARGIN_RAD` | 0.01, the former `action_normalization` default made explicit |
+| `limits.RUNNER_ACTION_CLIP` | 14.0, the raw-action clip the RL runner applies |
+| `limits.action_limit_reach()` | Action value at which each joint reaches its clip |
+| `policy.ACTION_CONTRACT_TOLERANCE_RAD` | 1e-9, the manifest-vs-contract comparison tolerance |
+
+`RUNNER_ACTION_CLIP` replaces the 3.0 that `robonex-balancing` and `robonex-walking`
+each hardcoded. With the 0.3.0 scales a raw action of 3.0 would leave 9 of 12 joints
+unable to reach their mechanical limit at all, so the clip has to be the largest
+`action_limit_reach()` magnitude (13.73, at hip_yaw) rounded up. A test enforces this.
+
+`action_normalization()` now raises if the standing pose falls outside the clipped
+range or if a scale is non-positive.
+
+Every policy trained against 0.2.0 or earlier maps actions to different targets and
+must be retrained. Checkpoints, exported ONNX and manifests from before this release
+are not portable.
+
 ## 0.2.0 — 2026-09-07
 
 Joint limits in `ACTUATED_JOINTS` replaced with the full measured reachable range.
