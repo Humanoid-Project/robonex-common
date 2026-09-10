@@ -4,18 +4,18 @@ from .joints import DEFAULT_JOINT_POS, JOINT_LIMITS_BY_ID, JOINT_LIMITS_BY_NAME
 DEFAULT_LIMIT_MARGIN_RAD = 0.05
 DEFAULT_ACTION_MARGIN_RAD = 0.01
 ACTION_SCALE_RAD = {
-    "l_hip_yaw_joint": 0.12,
-    "l_hip_pitch_joint": 0.25,
-    "l_hip_roll_joint": 0.25,
-    "l_knee_pitch_joint": 0.25,
-    "l_ankle_upper_joint": 0.15,
-    "l_ankle_lower_joint": 0.15,
-    "r_hip_yaw_joint": 0.12,
-    "r_hip_pitch_joint": 0.25,
-    "r_hip_roll_joint": 0.25,
-    "r_knee_pitch_joint": 0.25,
-    "r_ankle_upper_joint": 0.15,
-    "r_ankle_lower_joint": 0.15,
+    "l_hip_yaw_joint": 0.117718,
+    "l_hip_pitch_joint": 0.116809,
+    "l_hip_roll_joint": 0.031698,
+    "l_knee_pitch_joint": 0.078943,
+    "l_ankle_upper_joint": 0.025735,
+    "l_ankle_lower_joint": 0.028228,
+    "r_hip_yaw_joint": 0.117718,
+    "r_hip_pitch_joint": 0.116809,
+    "r_hip_roll_joint": 0.031698,
+    "r_knee_pitch_joint": 0.078943,
+    "r_ankle_upper_joint": 0.025735,
+    "r_ankle_lower_joint": 0.028228,
 }
 RUNNER_ACTION_CLIP = 14.0
 
@@ -47,6 +47,9 @@ def action_normalization(margin=DEFAULT_ACTION_MARGIN_RAD):
         scale = ACTION_SCALE_RAD[name]
         if scale <= 0.0:
             raise ValueError(f"invalid action scale for {name}: {scale}")
+        nearest_clip = min(default - clip_lower, clip_upper - default)
+        if scale * RUNNER_ACTION_CLIP > nearest_clip:
+            raise ValueError(f"action scale for {name} creates a target-clip dead zone: {scale}")
         offsets[name] = default
         scales[name] = scale
         clips[name] = (clip_lower, clip_upper)

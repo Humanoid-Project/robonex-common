@@ -37,12 +37,36 @@ def test_action_zero_commands_the_standing_pose():
         assert clips[name][0] <= offsets[name] <= clips[name][1]
 
 
-def test_action_clip_keeps_every_mechanical_limit_reachable():
+def test_action_scales_match_the_independent_physical_contract():
+    expected = {
+        "l_hip_yaw_joint": 0.117718,
+        "l_hip_pitch_joint": 0.116809,
+        "l_hip_roll_joint": 0.031698,
+        "l_knee_pitch_joint": 0.078943,
+        "l_ankle_upper_joint": 0.025735,
+        "l_ankle_lower_joint": 0.028228,
+        "r_hip_yaw_joint": 0.117718,
+        "r_hip_pitch_joint": 0.116809,
+        "r_hip_roll_joint": 0.031698,
+        "r_knee_pitch_joint": 0.078943,
+        "r_ankle_upper_joint": 0.025735,
+        "r_ankle_lower_joint": 0.028228,
+    }
+    assert ACTION_SCALE_RAD == pytest.approx(expected)
+
+
+def test_runner_clip_does_not_cross_any_target_clip_fence():
     reach = action_limit_reach(0.01)
     assert set(reach) == set(POLICY_JOINT_ORDER)
-    worst = max(max(abs(low), abs(high)) for low, high in reach.values())
-    assert worst == pytest.approx(13.734, abs=1.e-3)
-    assert worst <= RUNNER_ACTION_CLIP
+    nearest = {name: min(abs(low), abs(high)) for name, (low, high) in reach.items()}
+    assert min(nearest.values()) >= RUNNER_ACTION_CLIP
+    assert max(nearest.values()) == pytest.approx(RUNNER_ACTION_CLIP, abs=1.e-3)
+
+
+def test_action_normalization_rejects_a_target_clip_dead_zone(monkeypatch):
+    monkeypatch.setitem(ACTION_SCALE_RAD, "l_hip_roll_joint", 0.25)
+    with pytest.raises(ValueError, match="target-clip dead zone"):
+        action_normalization(0.01)
 
 
 def test_action_normalization_rejects_a_margin_that_excludes_the_standing_pose():

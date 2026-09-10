@@ -15,6 +15,31 @@ Bump `pyproject.toml` `version` and `__init__.__version__` in the same commit as
 
 <br>
 
+## 0.4.0 — 2026-09-10
+
+`ACTION_SCALE_RAD` is rescaled per joint so the nearest target clip is reached at
+approximately `|a| = RUNNER_ACTION_CLIP = 14`. Under 0.3.0 the nearest clip was reached
+as early as `|a| = 1.78` on `hip_roll`; the rest of the runner range produced the same
+clipped target and gave the policy no motion response or useful gradient. The new scales
+remove that target-clip dead zone and reduce target sensitivity, especially on hip roll,
+knee, and ankle.
+
+| Joint pair | 0.3.0 | 0.4.0 |
+| --- | ---: | ---: |
+| hip yaw | 0.12 | 0.117718 |
+| hip pitch | 0.25 | 0.116809 |
+| hip roll | 0.25 | 0.031698 |
+| knee pitch | 0.25 | 0.078943 |
+| ankle upper | 0.15 | 0.025735 |
+| ankle lower | 0.15 | 0.028228 |
+
+The farther side of an asymmetric joint range is intentionally no longer reachable.
+The standing-pose offset, target clips, `RUNNER_ACTION_CLIP`, observation layout, gains,
+and joint limits are unchanged. Existing checkpoints and policy manifests are incompatible
+with this action mapping and must not be resumed or deployed.
+
+<br>
+
 ## 0.3.0 — 2026-09-08
 
 `action_normalization()` no longer normalizes against the joint range. It now maps
