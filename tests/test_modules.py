@@ -5,10 +5,18 @@ from pathlib import Path
 import pytest
 
 import robonex_common
-from robonex_common.actuators import ACTUATOR_PARAMETERS
+from robonex_common.actuators import ACTUATOR_PARAMETERS, CONTROL_GAINS_BY_JOINT
 from robonex_common.imu import DEFAULT_IMU_BAUDRATE, DEFAULT_IMU_PORT, MOUNT_ROLL_DEG
 from robonex_common.joints import ACTUATED_JOINTS, DEFAULT_JOINT_POS, JOINT_BY_ID, channel_for_motor_id
-from robonex_common.motors import MOTOR_CONTROL_KD, MOTOR_CONTROL_KP, MOTOR_PHYSICS
+from robonex_common.motors import (
+    MOTOR_CONTROL_KD,
+    MOTOR_CONTROL_KP,
+    MOTOR_PHYSICS,
+    MOTOR_SPECS,
+    NO_LOAD_SPEED,
+    PEAK_TORQUE,
+    VELOCITY_LIMIT,
+)
 from robonex_common.paths import resolve_repo
 from robonex_common.protocol import FAULT_BIT_NAMES, decode_fault_bits
 
@@ -55,8 +63,18 @@ MEASURED_JOINTS = {
     12: ("r_ankle_lower_joint", "rs02", "can1", -0.575959, 0.610865),
 }
 MEASURED_PHYSICS = {
-    "rs02": (0.0042, 0.1),
-    "rs03": (0.02, 0.2),
+    "rs02": (0.0042, 0.0, 0.0, 0.0),
+    "rs03": (0.02, 0.0, 0.0, 0.0),
+}
+MEASURED_NO_LOAD_SPEED = {"rs02": 42.9, "rs03": 20.9}
+EXPECTED_VELOCITY_LIMIT = {"rs02": 38.61, "rs03": 18.81}
+EXPECTED_GAINS = {
+    "l_hip_yaw_joint": (100.0, 2.0),
+    "l_hip_pitch_joint": (100.0, 2.0),
+    "l_hip_roll_joint": (100.0, 2.0),
+    "l_knee_pitch_joint": (150.0, 4.0),
+    "l_ankle_upper_joint": (40.0, 2.0),
+    "l_ankle_lower_joint": (40.0, 2.0),
 }
 MEASURED_GAINS = (40.0, 2.0)
 
@@ -128,12 +146,37 @@ def test_standing_pose_is_the_mildly_bent_policy_reference():
 def test_actuator_parameters_carry_the_measured_gains_and_physics():
     stiffness, damping = MEASURED_GAINS
     assert (MOTOR_CONTROL_KP, MOTOR_CONTROL_KD) == pytest.approx(MEASURED_GAINS)
-    for model, (armature, friction) in MEASURED_PHYSICS.items():
+    for model, (armature, friction, static, viscous) in MEASURED_PHYSICS.items():
         assert MOTOR_PHYSICS[model]["armature"] == pytest.approx(armature)
         assert MOTOR_PHYSICS[model]["frictionloss"] == pytest.approx(friction)
-        assert ACTUATOR_PARAMETERS[model] == pytest.approx(
-            {"stiffness": stiffness, "damping": damping, "armature": armature, "friction": friction}
-        )
+        assert MOTOR_PHYSICS[model]["static_friction"] == pytest.approx(static)
+        assert MOTOR_PHYSICS[model]["viscous_friction"] == pytest.approx(viscous)
+        assert MOTOR_PHYSICS[model]["static_friction"] >= MOTOR_PHYSICS[model]["frictionloss"]
+        assert NO_LOAD_SPEED[model] == pytest.approx(MEASURED_NO_LOAD_SPEED[model])
+        assert NO_LOAD_SPEED[model] <= MOTOR_SPECS[model].v_max * 1.05
+        assert VELOCITY_LIMIT[model] == pytest.approx(EXPECTED_VELOCITY_LIMIT[model])
+        assert VELOCITY_LIMIT[model] < NO_LOAD_SPEED[model]
+        params = ACTUATOR_PARAMETERS[model]
+        assert params["armature"] == pytest.approx(armature)
+        assert params["friction"] == pytest.approx(static)
+        assert params["dynamic_friction"] == pytest.approx(friction)
+        assert params["viscous_friction"] == pytest.approx(viscous)
+        assert params["effort_limit_sim"] == pytest.approx(PEAK_TORQUE[model])
+        assert params["velocity_limit_sim"] == pytest.approx(EXPECTED_VELOCITY_LIMIT[model])
+
+
+def test_control_gains_are_per_joint_and_within_motor_limits():
+    for name, expected in EXPECTED_GAINS.items():
+        assert CONTROL_GAINS_BY_JOINT[name] == pytest.approx(expected)
+        assert CONTROL_GAINS_BY_JOINT["r" + name[1:]] == pytest.approx(expected)
+    for joint in ACTUATED_JOINTS:
+        kp, kd = CONTROL_GAINS_BY_JOINT[joint.model_name]
+        spec = MOTOR_SPECS[joint.motor_model]
+        assert 0.0 < kp <= spec.kp_max
+        assert 0.0 < kd <= spec.kd_max
+        group = ACTUATOR_PARAMETERS[joint.motor_model]
+        assert group["stiffness"][joint.model_name] == pytest.approx(kp)
+        assert group["damping"][joint.model_name] == pytest.approx(kd)
 
 
 def test_decode_fault_bits_reads_single_bits():
@@ -249,20 +292,29 @@ def test_action_pipeline_rejects_bad_shapes_and_values():
 
 
 def test_assemble_observation_orders_and_validates():
-    from robonex_common.runtime import assemble_observation
+    from robonex_common.runtime import OBSERVATION_HISTORY_LENGTH, assemble_observation
 
     observation = assemble_observation(
-        np.arange(12), np.arange(12) + 100, (1, 2, 3), (0, 0, -1), np.arange(12) + 200
+        np.arange(12), np.arange(12) + 100, (1, 2, 3), (0, 0, -1), (0.3, 0.0, 0.0),
+        (0.0, 1.0), np.arange(12) + 200,
     )
-    assert observation.shape == (42,)
-    assert observation[0] == 0 and observation[12] == 100
-    assert tuple(observation[24:27]) == (1, 2, 3)
-    assert tuple(observation[27:30]) == (0, 0, -1)
-    assert observation[30] == 200
+    assert observation.shape == (235,)
+    h = OBSERVATION_HISTORY_LENGTH
+    # a single frame back-fills the history, so every slot of a term repeats it
+    assert observation[0] == 0 and observation[12 * h] == 100
+    assert tuple(observation[24 * h : 24 * h + 3]) == (1, 2, 3)
+    assert tuple(observation[27 * h : 27 * h + 3]) == (0, 0, -1)
+    assert tuple(observation[30 * h : 30 * h + 3]) == pytest.approx((0.3, 0.0, 0.0))
+    assert tuple(observation[33 * h : 33 * h + 2]) == pytest.approx((0.0, 1.0))
+    assert observation[35 * h] == 200
     with pytest.raises(ValueError):
-        assemble_observation(np.arange(11), np.arange(12), (1, 2, 3), (0, 0, -1), np.arange(12))
+        assemble_observation(
+            np.arange(11), np.arange(12), (1, 2, 3), (0, 0, -1), (0, 0, 0), (0, 1), np.arange(12)
+        )
     with pytest.raises(ValueError):
-        assemble_observation(np.full(12, np.nan), np.arange(12), (1, 2, 3), (0, 0, -1), np.arange(12))
+        assemble_observation(
+            np.full(12, np.nan), np.arange(12), (1, 2, 3), (0, 0, -1), (0, 0, 0), (0, 1), np.arange(12)
+        )
 
 
 def test_pyproject_version_matches_the_package():
