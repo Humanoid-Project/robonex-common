@@ -1,25 +1,34 @@
+import math
+
 from .joints import DEFAULT_JOINT_POS, JOINT_LIMITS_BY_ID, JOINT_LIMITS_BY_NAME
 
 
 DEFAULT_LIMIT_MARGIN_RAD = 0.05
 DEFAULT_ACTION_MARGIN_RAD = 0.01
-ACTION_SCALE_RAD = {
-    "l_hip_yaw_joint": 0.117718,
-    "l_hip_pitch_joint": 0.116809,
-    "l_hip_roll_joint": 0.031698,
-    "l_knee_pitch_joint": 0.078943,
-    "l_ankle_upper_joint": 0.025735,
-    "l_ankle_lower_joint": 0.028228,
-    "r_hip_yaw_joint": 0.117718,
-    "r_hip_pitch_joint": 0.116809,
-    "r_hip_roll_joint": 0.031698,
-    "r_knee_pitch_joint": 0.078943,
-    "r_ankle_upper_joint": 0.025735,
-    "r_ankle_lower_joint": 0.028228,
-}
 RUNNER_ACTION_CLIP = 14.0
+MAX_ACTION_SCALE_RAD = 0.25
+ACTION_REACH_SIGMA = 3.0
 
 
+def _action_scale(name, margin=DEFAULT_ACTION_MARGIN_RAD):
+    """Scale so the fence sits at least ``ACTION_REACH_SIGMA`` sigma away.
+
+    The bent default pose leaves the ankles only ~0.36 rad of upward travel, so
+    a uniform 0.25 rad scale puts their fence at 1.4 sigma and clips a quarter of
+    all steps. Shrinking the global exploration instead would also halve it on
+    hip_pitch and knee, which never clip and are the joints a step needs.
+    The lower bound keeps every fence reachable inside RUNNER_ACTION_CLIP.
+    """
+    lower, upper = JOINT_LIMITS_BY_NAME[name]
+    default = DEFAULT_JOINT_POS[name]
+    near = min(default - (lower + margin), (upper - margin) - default)
+    far = max(default - (lower + margin), (upper - margin) - default)
+    scale = max(near / ACTION_REACH_SIGMA, far / RUNNER_ACTION_CLIP)
+    # round up: rounding down can leave the far fence a hair out of reach
+    return min(MAX_ACTION_SCALE_RAD, math.ceil(scale * 1e6) / 1e6)
+
+
+ACTION_SCALE_RAD = {name: _action_scale(name) for name in JOINT_LIMITS_BY_NAME}
 def joint_limit_for(motor_id, margin=DEFAULT_LIMIT_MARGIN_RAD):
     lower, upper = JOINT_LIMITS_BY_ID[motor_id]
     if margin < 0.0 or lower + margin >= upper - margin:
@@ -47,9 +56,9 @@ def action_normalization(margin=DEFAULT_ACTION_MARGIN_RAD):
         scale = ACTION_SCALE_RAD[name]
         if scale <= 0.0:
             raise ValueError(f"invalid action scale for {name}: {scale}")
-        nearest_clip = min(default - clip_lower, clip_upper - default)
-        if scale * RUNNER_ACTION_CLIP > nearest_clip:
-            raise ValueError(f"action scale for {name} creates a target-clip dead zone: {scale}")
+        farthest_clip = max(default - clip_lower, clip_upper - default)
+        if scale * RUNNER_ACTION_CLIP < farthest_clip:
+            raise ValueError(f"action scale for {name} cannot reach its target clip: {scale}")
         offsets[name] = default
         scales[name] = scale
         clips[name] = (clip_lower, clip_upper)

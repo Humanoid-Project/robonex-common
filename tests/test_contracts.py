@@ -6,6 +6,7 @@ from robonex_common.joints import (
     ACTUATED_JOINTS,
     DEFAULT_JOINT_POS,
     JOINT_BY_ID,
+    JOINT_LIMITS_BY_NAME,
     PASSIVE_CLOSED_LOOP_JOINTS,
     POLICY_JOINT_ORDER,
 )
@@ -38,34 +39,51 @@ def test_action_zero_commands_the_standing_pose():
 
 
 def test_action_scales_match_the_independent_physical_contract():
+    assert set(ACTION_SCALE_RAD) == set(POLICY_JOINT_ORDER)
     expected = {
-        "l_hip_yaw_joint": 0.117718,
-        "l_hip_pitch_joint": 0.116809,
-        "l_hip_roll_joint": 0.031698,
-        "l_knee_pitch_joint": 0.078943,
-        "l_ankle_upper_joint": 0.025735,
-        "l_ankle_lower_joint": 0.028228,
-        "r_hip_yaw_joint": 0.117718,
-        "r_hip_pitch_joint": 0.116809,
-        "r_hip_roll_joint": 0.031698,
-        "r_knee_pitch_joint": 0.078943,
-        "r_ankle_upper_joint": 0.025735,
-        "r_ankle_lower_joint": 0.028228,
+        "l_hip_yaw_joint": 0.25, "r_hip_yaw_joint": 0.25,
+        "l_hip_pitch_joint": 0.25, "r_hip_pitch_joint": 0.25,
+        "l_knee_pitch_joint": 0.25, "r_knee_pitch_joint": 0.25,
+        "l_hip_roll_joint": 0.152626, "r_hip_roll_joint": 0.152626,
+        "l_ankle_upper_joint": 0.1201, "r_ankle_upper_joint": 0.1201,
+        "l_ankle_lower_joint": 0.131736, "r_ankle_lower_joint": 0.131736,
     }
-    assert ACTION_SCALE_RAD == pytest.approx(expected)
+    assert ACTION_SCALE_RAD == pytest.approx(expected, abs=1e-6)
 
 
-def test_runner_clip_does_not_cross_any_target_clip_fence():
+def test_every_fence_sits_at_least_three_sigma_from_the_action_mean():
+    """A fence inside 3 sigma clips a quarter of all steps at init_noise_std=1."""
+    reach = action_limit_reach(0.01)
+    for name, (low, high) in reach.items():
+        assert min(abs(low), abs(high)) >= 2.9, name
+
+
+def test_every_target_clip_is_reachable_with_headroom_before_the_runner_clip():
     reach = action_limit_reach(0.01)
     assert set(reach) == set(POLICY_JOINT_ORDER)
+    farthest = {name: max(abs(low), abs(high)) for name, (low, high) in reach.items()}
     nearest = {name: min(abs(low), abs(high)) for name, (low, high) in reach.items()}
-    assert min(nearest.values()) >= RUNNER_ACTION_CLIP
-    assert max(nearest.values()) == pytest.approx(RUNNER_ACTION_CLIP, abs=1.e-3)
+    # the policy can drive every joint onto its fence without being clipped by the runner
+    assert max(farthest.values()) <= RUNNER_ACTION_CLIP
+    # and it reaches the fence well before the runner clip, so exploration never sits on it
+    assert max(nearest.values()) <= 0.5 * RUNNER_ACTION_CLIP
+    # every fence is at least three sigma out, so init noise rarely clips
+    assert min(nearest.values()) >= 2.9
 
 
-def test_action_normalization_rejects_a_target_clip_dead_zone(monkeypatch):
-    monkeypatch.setitem(ACTION_SCALE_RAD, "l_hip_roll_joint", 0.25)
-    with pytest.raises(ValueError, match="target-clip dead zone"):
+def test_target_clip_fence_stays_inside_the_hard_joint_limits():
+    offsets, scales, clips = action_normalization(0.01)
+    for name, (low, high) in clips.items():
+        lower, upper = JOINT_LIMITS_BY_NAME[name]
+        assert lower < low < high < upper
+        assert low == pytest.approx(lower + 0.01)
+        assert high == pytest.approx(upper - 0.01)
+        assert low < offsets[name] < high
+
+
+def test_action_normalization_rejects_a_scale_that_cannot_reach_the_fence(monkeypatch):
+    monkeypatch.setitem(ACTION_SCALE_RAD, "l_hip_roll_joint", 0.001)
+    with pytest.raises(ValueError, match="cannot reach its target clip"):
         action_normalization(0.01)
 
 
@@ -243,3 +261,100 @@ def test_feedback_decoding_includes_mode_status():
     assert motor.last_mode_status == 2
     assert motor.last_fault == 5
     assert motor.last_temp == 40.0
+
+
+def test_observation_history_is_term_major_with_the_oldest_frame_first():
+    from robonex_common.runtime import (
+        OBSERVATION_FRAME_SIZE,
+        OBSERVATION_HISTORY_LENGTH,
+        OBSERVATION_SIZE,
+        OBSERVATION_TERM_SIZES,
+        ObservationHistory,
+    )
+    import numpy as np
+
+    history = ObservationHistory()
+    # frame k is filled entirely with the value k so the layout is readable
+    for k in range(OBSERVATION_HISTORY_LENGTH):
+        history.append(np.full(OBSERVATION_FRAME_SIZE, float(k), dtype=np.float32))
+    observation = history.observation()
+    assert observation.shape == (OBSERVATION_SIZE,)
+
+    # Isaac Lab keeps one buffer per term and flattens it oldest-first, then
+    # concatenates the terms: [term0(t-4..t), term1(t-4..t), ...]
+    offset = 0
+    for _, size in OBSERVATION_TERM_SIZES:
+        block = observation[offset : offset + size * OBSERVATION_HISTORY_LENGTH]
+        for k in range(OBSERVATION_HISTORY_LENGTH):
+            assert np.all(block[k * size : (k + 1) * size] == float(k))
+        offset += size * OBSERVATION_HISTORY_LENGTH
+    assert offset == OBSERVATION_SIZE
+
+
+def test_observation_history_prefills_and_rolls():
+    from robonex_common.runtime import OBSERVATION_FRAME_SIZE, ObservationHistory
+    import numpy as np
+
+    history = ObservationHistory()
+    history.append(np.full(OBSERVATION_FRAME_SIZE, 7.0, dtype=np.float32))
+    # the first frame back-fills the whole buffer, so nothing reads as zero
+    assert np.all(history.observation() == 7.0)
+    history.append(np.full(OBSERVATION_FRAME_SIZE, 9.0, dtype=np.float32))
+    joint_pos_block = history.observation()[:60]
+    assert np.all(joint_pos_block[:48] == 7.0)
+    assert np.all(joint_pos_block[48:] == 9.0)
+
+
+def test_observation_frame_rejects_a_wrong_command_width():
+    from robonex_common.runtime import assemble_observation_frame
+    import numpy as np
+
+    ok = assemble_observation_frame(
+        np.zeros(12), np.zeros(12), np.zeros(3), np.zeros(3), np.zeros(3), np.zeros(2), np.zeros(12)
+    )
+    assert ok.shape == (47,)
+    with pytest.raises(ValueError):
+        assemble_observation_frame(
+            np.zeros(12), np.zeros(12), np.zeros(3), np.zeros(3), np.zeros(2), np.zeros(2), np.zeros(12)
+        )
+
+
+def test_observation_history_follows_the_manifest_layout():
+    from robonex_common.runtime import ObservationHistory
+
+    class _Contract:
+        def __init__(self, terms, size):
+            self.observation_terms = terms
+            self.observation_size = size
+
+    walking = ObservationHistory.from_contract(
+        _Contract(
+            (
+                "joint_pos_rel:12x5",
+                "joint_vel_rel:12x5",
+                "imu_ang_vel:3x5",
+                "projected_gravity:3x5",
+                "velocity_commands:3x5",
+                "gait_phase:2x5",
+                "last_action:12x5",
+            ),
+            235,
+        )
+    )
+    assert (walking.frame_size, walking.history_length, walking.expected_size) == (47, 5, 235)
+
+    # a manifest without an "x<history>" suffix is a single-frame layout
+    balancing = ObservationHistory.from_contract(
+        _Contract(
+            ("joint_pos_rel:12", "joint_vel_rel:12", "imu_ang_vel:3", "projected_gravity:3", "last_action:12"),
+            42,
+        )
+    )
+    assert (balancing.frame_size, balancing.history_length, balancing.expected_size) == (42, 1, 42)
+
+    with pytest.raises(ValueError, match="observation_size"):
+        ObservationHistory.from_contract(_Contract(("joint_pos_rel:12x5",), 42))
+    with pytest.raises(ValueError, match="one history length"):
+        ObservationHistory.from_contract(_Contract(("a:3x5", "b:3x2"), 45))
+    with pytest.raises(ValueError, match="malformed"):
+        ObservationHistory.from_contract(_Contract(("a:bad",), 1))

@@ -1,6 +1,6 @@
-__version__ = "0.4.0"
+__version__ = "0.5.0"
 
-from .actuators import ACTUATOR_PARAMETERS
+from .actuators import ACTUATOR_PARAMETERS, CONTROL_GAINS_BY_JOINT
 from .can import FeedbackHub, Motor, drain
 from .imu import (
     DEFAULT_IMU_BAUDRATE,
@@ -39,6 +39,9 @@ from .motors import (
     MOTOR_CONTROL_KP,
     MOTOR_PHYSICS,
     MOTOR_SPECS,
+    JOINT_CONTROL_GAINS,
+    NO_LOAD_SPEED,
+    VELOCITY_LIMIT,
     PEAK_TORQUE,
     RATED_TORQUE,
     MotorSpec,
@@ -72,6 +75,7 @@ __all__ = [
     "ACTION_SCALE_RAD",
     "ACTUATED_JOINTS",
     "ACTUATOR_PARAMETERS",
+    "CONTROL_GAINS_BY_JOINT",
     "BALANCING_REPO_NAMES",
     "CHANNEL_MOTOR_IDS",
     "COMMON_REPO_NAMES",
@@ -95,12 +99,15 @@ __all__ = [
     "JOINT_BY_MODEL_NAME",
     "JOINT_LIMITS_BY_ID",
     "JOINT_LIMITS_BY_NAME",
+    "JOINT_CONTROL_GAINS",
     "JointSpec",
     "MOTOR_CONTROL_KD",
     "MOTOR_CONTROL_KP",
     "MOTOR_PHYSICS",
     "MOTOR_SPECS",
     "MOUNT_ROLL_DEG",
+    "NO_LOAD_SPEED",
+    "VELOCITY_LIMIT",
     "Motor",
     "MotorSpec",
     "PASSIVE_CLOSED_LOOP_JOINTS",
