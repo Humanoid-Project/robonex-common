@@ -5,8 +5,54 @@
 ```text
 setup/
 ├── SETUP.md
-├── release.sh
+├── setup.sh
 └── setup_isaacsim.sh
+```
+
+<br>
+
+## `setup.sh`
+
+Clones `robonex-description`, `robonex-deploy`, `robstride-motor-test` and `IMU_N100_Test` into one project root,
+creates each `.venv`, installs its `requirements.txt` (which pins `robonex-common`), and builds the deploy `n100` module.
+Anything already present is skipped.
+
+```bash
+# Example
+bash <(curl -fsSL https://raw.githubusercontent.com/Humanoid-Project/robonex-common/main/setup/setup.sh)
+
+bash <(curl -fsSL https://raw.githubusercontent.com/Humanoid-Project/robonex-common/main/setup/setup.sh) ~/work/humanoid_project
+
+PYTHON=python3.10 ./setup/setup.sh
+```
+
+| Command | Option | Default | Description |
+| --- | --- | --- | --- |
+| - | `root` | `~/humanoid_project` | Project root, created if missing |
+
+| Variable | Required | Default | Description |
+| --- | --- | --- | --- |
+| `PYTHON` | No | `python3` | Interpreter used to create each `.venv` |
+
+| Output | Description |
+| --- | --- |
+| `<root>/robonex-description`, `robonex-deploy`, `robstride-motor-test`, `IMU_N100_Test` | Git checkouts |
+| `<repo>/.venv` | One venv per Python repo, with `robonex-common` at the pinned tag |
+| `robonex-deploy/scripts/policy_test/n100*.so` | IMU Python module, built only if `cmake` and a C++ compiler exist |
+
+<br>
+
+## `setup_isaacsim.sh`
+
+Creates the `isaacsim` conda env (Isaac Sim 5.1.0, Isaac Lab v2.3.2) used by
+`robonex-balancing` and `robonex-walking`. Must be `source`d, not `bash`ed.
+
+```bash
+# Example
+cd ~/humanoid_project
+source ./robonex-common/setup/setup_isaacsim.sh
+
+source <(curl -fsSL https://raw.githubusercontent.com/Humanoid-Project/robonex-common/main/setup/setup_isaacsim.sh)
 ```
 
 <br>
@@ -37,46 +83,3 @@ pip install "robonex-common[can,policy] @ git+https://github.com/Humanoid-Projec
 | `robonex-deploy` | `robonex-common[can,policy]` | `.venv` |
 | `robonex-balancing` | `robonex-common` | conda `isaacsim` |
 | `robonex-walking` | `robonex-common` | conda `isaacsim` |
-
-<br>
-
-## `release.sh`
-
-Publishes a new `robonex-common` version and refreshes every dependent checkout.
-Add the changelog entry first.
-
-```bash
-# Example
-cd ~/humanoid_project/robonex-common
-./setup/release.sh 0.2.0
-
-./setup/release.sh 0.2.0 --no-push
-```
-
-| Option | Required | Default | Description |
-| --- | :---: | --- | --- |
-| `version` | Yes | - | `MAJOR.MINOR.PATCH`, must be newer than the current one |
-| `--no-push` | No | Off | Commit and tag locally, skip push and reinstall |
-
-| Step | Behavior |
-| --- | --- |
-| Bump `pyproject.toml` and `__init__.__version__` | Fails if the version is not newer |
-| Run the test suite | Aborts before any commit on failure |
-| Rewrite every pin to the new tag | `requirements.txt` and `README.md` across all repos |
-| Commit, tag `v<version>`, push | Skipped with `--no-push` |
-| Reinstall into each repo's `.venv` | Skipped for a repo with no `.venv` |
-
-The conda env `isaacsim` is not touched; reinstall there yourself.
-
-<br>
-
-## `setup_isaacsim.sh`
-
-Creates the `isaacsim` conda env (Isaac Sim 5.1.0, Isaac Lab v2.3.2) used by
-`robonex-balancing` and `robonex-walking`. Must be `source`d, not `bash`ed.
-
-```bash
-# Example
-cd ~/humanoid_project
-source ./robonex-common/setup/setup_isaacsim.sh
-```

@@ -20,7 +20,7 @@ robonex-common/
 │   └── runtime.py
 ├── setup/
 │   ├── SETUP.md
-│   ├── release.sh
+│   ├── setup.sh
 │   └── setup_isaacsim.sh
 └── tests/
     ├── test_contracts.py
@@ -62,21 +62,14 @@ pip install "robonex-common[can,policy] @ git+https://github.com/Humanoid-Projec
 
 <br>
 
-## Release
+## Project setup
 
-Add the changelog entry, then publish and refresh every dependent checkout in one step.
+Clones `robonex-description`, `robonex-deploy`, `robstride-motor-test` and `IMU_N100_Test`, then sets up each `.venv`.
 See [`setup/SETUP.md`](setup/SETUP.md).
 
 ```bash
 # Example
-cd ~/humanoid_project
-git clone https://github.com/Humanoid-Project/robonex-common.git
-cd robonex-common
-python3 -m venv .venv
-source .venv/bin/activate
-pip install pytest numpy
-
-./setup/release.sh 0.2.0
+bash <(curl -fsSL https://raw.githubusercontent.com/Humanoid-Project/robonex-common/main/setup/setup.sh)
 ```
 
 <br>
