@@ -18,10 +18,10 @@ Always the published tag — never a local checkout. Each repo pins it in its ow
 
 ```bash
 # Example
-pip install "robonex-common @ git+https://github.com/Humanoid-Project/robonex-common.git@v0.4.0"
+pip install "robonex-common @ git+https://github.com/Humanoid-Project/robonex-common.git@v0.5.0"
 
-pip install "robonex-common[can] @ git+https://github.com/Humanoid-Project/robonex-common.git@v0.4.0"
-pip install "robonex-common[can,policy] @ git+https://github.com/Humanoid-Project/robonex-common.git@v0.4.0"
+pip install "robonex-common[can] @ git+https://github.com/Humanoid-Project/robonex-common.git@v0.5.0"
+pip install "robonex-common[can,policy] @ git+https://github.com/Humanoid-Project/robonex-common.git@v0.5.0"
 ```
 
 | Extra | Pulls in | Needed for |

@@ -15,6 +15,60 @@ Bump `pyproject.toml` `version` and `__init__.__version__` in the same commit as
 
 <br>
 
+## 0.5.0 — 2026-09-14
+
+Recorded after the fact on 2026-09-24: the tag was cut by hand, not with `setup/release.sh`,
+so this entry and the pin updates were missing.
+
+**Control gains are per joint.** `JOINT_CONTROL_GAINS` gives kp/kd per joint role and
+`CONTROL_GAINS_BY_JOINT` maps it onto every actuated joint. `ACTUATOR_PARAMETERS`
+`stiffness` / `damping` are now per-joint dicts instead of one scalar per motor model.
+`MOTOR_CONTROL_KP` / `MOTOR_CONTROL_KD` (40 / 2) remain for tools that command a uniform gain.
+
+| Joint role | kp | kd |
+| --- | ---: | ---: |
+| hip yaw, hip pitch, hip roll | 100 | 2 |
+| knee pitch | 150 | 4 |
+| ankle upper, ankle lower | 40 | 2 |
+
+**Motor physics.**
+
+- `MOTOR_PHYSICS` splits friction into `frictionloss`, `static_friction` and `viscous_friction`,
+  all `0.0` (0.4.0: `frictionloss` 0.1 on RS02, 0.2 on RS03).
+- `ACTUATOR_PARAMETERS` adds `dynamic_friction`, `viscous_friction`, `effort_limit_sim`
+  (`PEAK_TORQUE`) and `velocity_limit_sim` (`VELOCITY_LIMIT`).
+- New `NO_LOAD_SPEED` (RS02 42.9, RS03 20.9 rad/s), `VELOCITY_LIMIT_DERATE = 0.9` and
+  `VELOCITY_LIMIT` (38.61 / 18.81 rad/s).
+- `RATED_TORQUE["rs03"]` is the standstill continuous value, `13.0` (0.4.0: `20.0`, the
+  heatsinked rotating rating).
+
+**Action scales are derived, not tabulated.** `ACTION_SCALE_RAD` is computed per joint as
+`max(near / 3, far / RUNNER_ACTION_CLIP)`, capped at `MAX_ACTION_SCALE_RAD = 0.25`, so the near
+fence sits at least 3 sigma out and the far fence stays reachable inside the runner clip.
+`action_normalization` now rejects a scale that cannot reach its far clip, instead of one that
+creates a near dead zone.
+
+| Joint pair | 0.4.0 | 0.5.0 |
+| --- | ---: | ---: |
+| hip yaw | 0.117718 | 0.25 |
+| hip pitch | 0.116809 | 0.25 |
+| hip roll | 0.031698 | 0.152626 |
+| knee pitch | 0.078943 | 0.25 |
+| ankle upper | 0.025735 | 0.1201 |
+| ankle lower | 0.028228 | 0.131736 |
+
+**Observation contract with history.** One frame is `OBSERVATION_TERM_SIZES` =
+`joint_pos_rel 12, joint_vel_rel 12, imu_ang_vel 3, projected_gravity 3, velocity_commands 3,
+gait_phase 2, last_action 12` (47); `OBSERVATION_HISTORY_LENGTH = 5` gives `OBSERVATION_SIZE = 235`,
+term-major and oldest frame first. New `assemble_observation_frame`, `ObservationHistory`,
+`GAIT_PERIOD_S = 0.8` and `gait_phase_at`. `assemble_observation` takes the new terms, so
+0.4.0 callers must be updated.
+
+Checkpoints and manifests built on 0.4.0 are incompatible with these scales, gains and
+observations and must not be deployed.
+
+<br>
+
 ## 0.4.0 — 2026-09-10
 
 `ACTION_SCALE_RAD` is rescaled per joint so the nearest target clip is reached at
