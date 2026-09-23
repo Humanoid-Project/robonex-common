@@ -136,7 +136,7 @@ def test_policy_contract_rejects_passive_joint(tmp_path):
     }
     path = tmp_path / "manifest.json"
     path.write_text(json.dumps(payload), encoding="utf-8")
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="unknown or passive joint"):
         PolicyContract.load(path)
 
 
