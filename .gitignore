@@ -1,15 +1,7 @@
+# Python
 __pycache__/
-*.pyc
 .pytest_cache/
-*.egg-info/
-.venv/
-.venv*/
-build/
-dist/
 
-.vscode/
-.agents/
-.codex/
-.claude/
-.grok/
-AGENTS.md
+# Build and packaging
+*.egg-info/
+build/
