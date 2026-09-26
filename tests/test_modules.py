@@ -98,9 +98,9 @@ def test_joint_limits_match_the_description_urdf():
         description = resolve_repo(("robonex-description",), "ROBONEX_DESCRIPTION_ROOT")
     except Exception:
         pytest.skip("robonex-description checkout not available")
-    urdf = description / "urdf/robonex.urdf"
+    urdf = description / "ver1/urdf/robonex.urdf"
     if not urdf.is_file():
-        pytest.skip("urdf/robonex.urdf not found")
+        pytest.skip("ver1/urdf/robonex.urdf not found")
     import xml.etree.ElementTree as ET
 
     limits = {}
