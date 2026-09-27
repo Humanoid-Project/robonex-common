@@ -48,19 +48,19 @@ def test_runtime_reports_the_missing_policy_extra():
     assert "robonex-common[policy]" in result.stderr
 
 
-MEASURED_JOINTS = {
-    1: ("l_hip_yaw_joint", "rs02", "can0", -1.658063, 1.658063),
-    2: ("l_hip_pitch_joint", "rs03", "can0", -1.745329, 1.745329),
-    3: ("l_hip_roll_joint", "rs03", "can0", -2.146755, 0.453786),
-    4: ("l_knee_pitch_joint", "rs03", "can0", -1.500983, 0.942478),
-    5: ("l_ankle_upper_joint", "rs02", "can0", -0.610865, 0.575959),
-    6: ("l_ankle_lower_joint", "rs02", "can0", -0.610865, 0.575959),
-    7: ("r_hip_yaw_joint", "rs02", "can1", -1.658063, 1.658063),
-    8: ("r_hip_pitch_joint", "rs03", "can1", -1.745329, 1.745329),
-    9: ("r_hip_roll_joint", "rs03", "can1", -0.453786, 2.146755),
-    10: ("r_knee_pitch_joint", "rs03", "can1", -0.942478, 1.500983),
-    11: ("r_ankle_upper_joint", "rs02", "can1", -0.575959, 0.610865),
-    12: ("r_ankle_lower_joint", "rs02", "can1", -0.575959, 0.610865),
+VER2_EDU_JOINTS = {
+    1: ("l_hip_yaw_joint", "rs02", "can0", -0.837758, 0.837758),
+    2: ("l_hip_pitch_joint", "rs03", "can0", -1.658063, 1.658063),
+    3: ("l_hip_roll_joint", "rs03", "can0", -2.094395, 0.174533),
+    4: ("l_knee_pitch_joint", "rs03", "can0", -1.22173, 0.174533),
+    5: ("l_ankle_upper_joint", "rs02", "can0", -0.279253, 0.872665),
+    6: ("l_ankle_lower_joint", "rs02", "can0", -0.872665, 0.523599),
+    7: ("r_hip_yaw_joint", "rs02", "can1", -0.837758, 0.837758),
+    8: ("r_hip_pitch_joint", "rs03", "can1", -1.658063, 1.658063),
+    9: ("r_hip_roll_joint", "rs03", "can1", -0.174533, 2.094395),
+    10: ("r_knee_pitch_joint", "rs03", "can1", -0.174533, 1.22173),
+    11: ("r_ankle_upper_joint", "rs02", "can1", -0.872665, 0.279253),
+    12: ("r_ankle_lower_joint", "rs02", "can1", -0.523599, 0.872665),
 }
 MEASURED_PHYSICS = {
     "rs02": (0.0042, 0.0, 0.0, 0.0),
@@ -79,10 +79,10 @@ EXPECTED_GAINS = {
 MEASURED_GAINS = (40.0, 2.0)
 
 
-def test_joint_table_matches_the_measured_hardware():
-    assert {joint.motor_id for joint in ACTUATED_JOINTS} == set(MEASURED_JOINTS)
+def test_joint_table_matches_the_ver2_edu_limits():
+    assert {joint.motor_id for joint in ACTUATED_JOINTS} == set(VER2_EDU_JOINTS)
     for joint in ACTUATED_JOINTS:
-        name, model, channel, lower, upper = MEASURED_JOINTS[joint.motor_id]
+        name, model, channel, lower, upper = VER2_EDU_JOINTS[joint.motor_id]
         assert joint.model_name == name
         assert joint.motor_model == model
         assert joint.channel == channel
@@ -91,26 +91,6 @@ def test_joint_table_matches_the_measured_hardware():
         assert channel_for_motor_id(joint.motor_id) == channel
     with pytest.raises(ValueError):
         channel_for_motor_id(99)
-
-
-def test_joint_limits_match_the_description_urdf():
-    try:
-        description = resolve_repo(("robonex-description",), "ROBONEX_DESCRIPTION_ROOT")
-    except Exception:
-        pytest.skip("robonex-description checkout not available")
-    urdf = description / "ver1/urdf/robonex.urdf"
-    if not urdf.is_file():
-        pytest.skip("ver1/urdf/robonex.urdf not found")
-    import xml.etree.ElementTree as ET
-
-    limits = {}
-    for joint in ET.parse(urdf).getroot().findall("joint"):
-        limit = joint.find("limit")
-        if limit is not None:
-            limits[joint.get("name")] = (float(limit.get("lower")), float(limit.get("upper")))
-    for joint in ACTUATED_JOINTS:
-        assert joint.model_name in limits, joint.model_name
-        assert (joint.lower, joint.upper) == pytest.approx(limits[joint.model_name], abs=1e-6), joint.model_name
 
 
 def test_every_right_joint_is_the_sign_mirror_of_its_left_counterpart():
@@ -138,9 +118,9 @@ def test_standing_pose_is_the_mildly_bent_policy_reference():
     assert DEFAULT_JOINT_POS["l_hip_yaw_joint"] == 0.0
     assert DEFAULT_JOINT_POS["l_hip_roll_joint"] == 0.0
     assert DEFAULT_JOINT_POS["l_hip_pitch_joint"] == pytest.approx(0.1)
-    assert DEFAULT_JOINT_POS["l_knee_pitch_joint"] == pytest.approx(-0.38578)
-    assert DEFAULT_JOINT_POS["l_ankle_upper_joint"] == pytest.approx(0.2056595)
-    assert DEFAULT_JOINT_POS["l_ankle_lower_joint"] == pytest.approx(-0.2056595)
+    assert DEFAULT_JOINT_POS["l_knee_pitch_joint"] == pytest.approx(-0.3298656951565011)
+    assert DEFAULT_JOINT_POS["l_ankle_upper_joint"] == pytest.approx(0.21255773798848565)
+    assert DEFAULT_JOINT_POS["l_ankle_lower_joint"] == pytest.approx(-0.2038048914121279)
 
 
 def test_actuator_parameters_carry_the_measured_gains_and_physics():
@@ -233,16 +213,19 @@ def _contract():
     from robonex_common.joints import POLICY_JOINT_ORDER
     from robonex_common.policy import PolicyContract
 
+    from robonex_common.models import VER2_EDU
+
     offsets, scales, clips = action_normalization(0.01)
+    roll = VER2_EDU.foot_roll
     return PolicyContract(
-        schema_version=2,
+        schema_version=3,
         task="test",
         policy_file="p.onnx",
         policy_sha256="0" * 64,
         description_sha256="1" * 64,
         common_sha256="2" * 64,
         training_sha256="3" * 64,
-        description_model="mujoco/robot/scene.xml",
+        description_model="ver2/mujoco/robot/edu/scene_fixed.xml",
         joint_order=POLICY_JOINT_ORDER,
         observation_terms=("joint_pos_rel:12",),
         action_offsets=tuple(offsets[n] for n in POLICY_JOINT_ORDER),
@@ -255,6 +238,10 @@ def _contract():
         description_commit="a" * 40,
         common_commit="b" * 40,
         training_commit="c" * 40,
+        robot_model="ver2_edu",
+        foot_roll_limit=roll.limit,
+        foot_roll_coeffs=tuple(roll.coeffs),
+        foot_roll_pairs=tuple(tuple(pair) for pair in roll.pairs),
     )
 
 

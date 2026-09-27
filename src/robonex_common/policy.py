@@ -9,7 +9,7 @@ from .limits import action_normalization
 from .models import robot_model
 
 ACTION_CONTRACT_TOLERANCE_RAD = 1.0e-9
-SUPPORTED_SCHEMAS = (2, 3)
+SUPPORTED_SCHEMAS = (3,)
 CURRENT_SCHEMA = 3
 
 
@@ -35,7 +35,7 @@ class PolicyContract:
     description_commit: str
     common_commit: str
     training_commit: str
-    robot_model: str = "ver1"
+    robot_model: str = "ver2_edu"
     foot_roll_limit: float = 0.0
     foot_roll_coeffs: tuple[float, ...] = ()
     foot_roll_pairs: tuple[tuple[str, str, float], ...] = ()
@@ -95,8 +95,6 @@ class PolicyContract:
     def validate(self):
         if self.schema_version not in SUPPORTED_SCHEMAS:
             raise ValueError(f"unsupported policy manifest schema: {self.schema_version}")
-        if self.schema_version == 2 and self.robot_model != "ver1":
-            raise ValueError("schema 2 manifests describe the Ver.1 robot only")
         model = robot_model(self.robot_model)
         expected_roll = model.foot_roll
         actual_roll = (self.foot_roll_limit, tuple(self.foot_roll_coeffs), tuple(tuple(p) for p in self.foot_roll_pairs))

@@ -74,9 +74,9 @@ def test_ver2_normalization_matches_the_w78_training_run():
     assert offsets["l_knee_pitch_joint"] == pytest.approx(-0.3298656951565011)
 
 
-def test_ver1_is_still_the_default():
-    assert action_normalization(0.01) == action_normalization(0.01, model="ver1")
-    assert joint_limit_for(1) != joint_limit_for(1, model="ver2_edu")
+def test_ver2_edu_is_the_default():
+    assert action_normalization(0.01) == action_normalization(0.01, model="ver2_edu")
+    assert joint_limit_for(1) == joint_limit_for(1, model="ver2_edu")
 
 
 def test_ver2_limits_match_the_description_constants():
@@ -101,18 +101,14 @@ def test_schema3_ver2_manifest_round_trips(tmp_path):
     assert again == contract
 
 
-def test_schema2_manifest_is_ver1_without_roll(tmp_path):
-    contract = _load(tmp_path, _payload("ver1", schema=2))
-    assert contract.robot_model == "ver1" and contract.foot_roll_limit == 0.0
-    assert "robot_model" not in contract.to_dict()
+def test_schema2_manifest_is_refused(tmp_path):
+    with pytest.raises(ValueError, match="unsupported policy manifest schema: 2"):
+        _load(tmp_path, _payload("ver2_edu", schema=2))
 
 
-def test_ver1_policy_is_refused_against_ver2(tmp_path):
-    payload = _payload("ver1")
-    payload["robot_model"] = "ver2_edu"
-    roll = VER2_EDU.foot_roll
-    payload.update(foot_roll_limit=roll.limit, foot_roll_coeffs=list(roll.coeffs),
-                   foot_roll_pairs=[list(p) for p in roll.pairs])
+def test_a_policy_with_other_action_scales_is_refused(tmp_path):
+    payload = _payload("ver2_edu")
+    payload["action_scales"] = [0.5 * value for value in payload["action_scales"]]
     with pytest.raises(ValueError, match="action contract mismatch"):
         _load(tmp_path, payload)
 
@@ -130,8 +126,8 @@ def test_a_manifest_cannot_weaken_the_roll_clip(tmp_path, field, value):
 
 
 def test_unknown_model_is_refused(tmp_path):
-    payload = _payload("ver1")
-    payload["robot_model"] = "ver3"
+    payload = _payload("ver2_edu")
+    payload["robot_model"] = "ver1"
     with pytest.raises(ValueError, match="unknown robot model"):
         _load(tmp_path, payload)
 
@@ -178,11 +174,6 @@ def test_roll_clip_is_mirror_symmetric(tmp_path):
             assert targets[order.index("r_" + name[2:])] == pytest.approx(-targets[order.index(name)], abs=1e-6)
 
 
-def test_ver1_pipeline_has_no_roll_clip(tmp_path):
-    pipeline = ActionPipeline(_load(tmp_path, _payload("ver1")))
-    assert pipeline.roll_pairs == []
-
-
 def test_clip_is_idempotent():
     roll = VER2_EDU.foot_roll
     upper_range, lower_range = (-0.269253, 0.862665), (-0.862665, 0.513599)
@@ -193,4 +184,4 @@ def test_clip_is_idempotent():
 
 
 def test_every_model_is_registered():
-    assert set(ROBOT_MODELS) == {"ver1", "ver2_edu"}
+    assert set(ROBOT_MODELS) == {"ver2_edu"}

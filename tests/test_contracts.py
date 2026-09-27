@@ -18,9 +18,19 @@ from robonex_common.limits import (
     joint_limit_for,
 )
 from robonex_common.can import Motor
+from robonex_common.models import VER2_EDU
 from robonex_common.motors import MOTOR_SPECS
 from robonex_common.policy import PolicyContract, mujoco_bundle_sha256, python_source_sha256
 from robonex_common.protocol import build_arbitration_id, parse_arbitration_id
+
+
+_ROLL = VER2_EDU.foot_roll
+_ROLL_FIELDS = {
+    "robot_model": "ver2_edu",
+    "foot_roll_limit": _ROLL.limit,
+    "foot_roll_coeffs": list(_ROLL.coeffs),
+    "foot_roll_pairs": [list(pair) for pair in _ROLL.pairs],
+}
 
 
 def test_joint_contract_is_complete_and_disjoint():
@@ -43,19 +53,20 @@ def test_action_scales_match_the_independent_physical_contract():
     expected = {
         "l_hip_yaw_joint": 0.25, "r_hip_yaw_joint": 0.25,
         "l_hip_pitch_joint": 0.25, "r_hip_pitch_joint": 0.25,
-        "l_knee_pitch_joint": 0.25, "r_knee_pitch_joint": 0.25,
-        "l_hip_roll_joint": 0.152626, "r_hip_roll_joint": 0.152626,
-        "l_ankle_upper_joint": 0.1201, "r_ankle_upper_joint": 0.1201,
-        "l_ankle_lower_joint": 0.131736, "r_ankle_lower_joint": 0.131736,
+        "l_knee_pitch_joint": 0.1648, "r_knee_pitch_joint": 0.1648,
+        "l_hip_roll_joint": 0.148886, "r_hip_roll_joint": 0.148886,
+        "l_ankle_upper_joint": 0.160604, "r_ankle_upper_joint": 0.160604,
+        "l_ankle_lower_joint": 0.219621, "r_ankle_lower_joint": 0.219621,
     }
     assert ACTION_SCALE_RAD == pytest.approx(expected, abs=1e-6)
 
 
-def test_every_fence_sits_at_least_three_sigma_from_the_action_mean():
+def test_every_fence_sits_at_least_three_sigma_unless_the_far_fence_sets_the_scale():
     """A fence inside 3 sigma clips a quarter of all steps at init_noise_std=1."""
     reach = action_limit_reach(0.01)
     for name, (low, high) in reach.items():
-        assert min(abs(low), abs(high)) >= 2.9, name
+        near, far = min(abs(low), abs(high)), max(abs(low), abs(high))
+        assert near >= 2.9 or far == pytest.approx(RUNNER_ACTION_CLIP, abs=1e-3), name
 
 
 def test_every_target_clip_is_reachable_with_headroom_before_the_runner_clip():
@@ -68,7 +79,7 @@ def test_every_target_clip_is_reachable_with_headroom_before_the_runner_clip():
     # and it reaches the fence well before the runner clip, so exploration never sits on it
     assert max(nearest.values()) <= 0.5 * RUNNER_ACTION_CLIP
     # every fence is at least three sigma out, so init noise rarely clips
-    assert min(nearest.values()) >= 2.9
+    assert all(nearest[name] >= 2.9 or farthest[name] == pytest.approx(RUNNER_ACTION_CLIP, abs=1e-3) for name in reach)
 
 
 def test_target_clip_fence_stays_inside_the_hard_joint_limits():
@@ -82,7 +93,9 @@ def test_target_clip_fence_stays_inside_the_hard_joint_limits():
 
 
 def test_action_normalization_rejects_a_scale_that_cannot_reach_the_fence(monkeypatch):
-    monkeypatch.setitem(ACTION_SCALE_RAD, "l_hip_roll_joint", 0.001)
+    import robonex_common.limits as limits
+
+    monkeypatch.setattr(limits, "_action_scale", lambda name, margin=0.01, model="ver2_edu": 0.001)
     with pytest.raises(ValueError, match="cannot reach its target clip"):
         action_normalization(0.01)
 
@@ -113,14 +126,14 @@ def test_arbitration_id_round_trip():
 
 def test_policy_contract_rejects_passive_joint(tmp_path):
     payload = {
-        "schema_version": 2,
+        "schema_version": 3,
         "task": "test",
         "policy_file": "policy.onnx",
         "policy_sha256": "0" * 64,
         "description_sha256": "1" * 64,
         "common_sha256": "2" * 64,
         "training_sha256": "3" * 64,
-        "description_model": "mujoco/robot/scene.xml",
+        "description_model": "ver2/mujoco/robot/edu/scene_fixed.xml",
         "joint_order": ["l_knee_joint"],
         "observation_terms": ["joint_pos"],
         "action_offsets": [0.0],
@@ -133,6 +146,7 @@ def test_policy_contract_rejects_passive_joint(tmp_path):
         "description_commit": "test",
         "common_commit": "test",
         "training_commit": "test",
+        **_ROLL_FIELDS,
     }
     path = tmp_path / "manifest.json"
     path.write_text(json.dumps(payload), encoding="utf-8")
@@ -150,14 +164,14 @@ def test_policy_contract_rejects_old_schema_cleanly(tmp_path):
 def _manifest_payload_for(joint_order):
     offsets, scales, clips = action_normalization(0.01)
     return {
-        "schema_version": 2,
+        "schema_version": 3,
         "task": "test",
         "policy_file": "policy.onnx",
         "policy_sha256": "0" * 64,
         "description_sha256": "1" * 64,
         "common_sha256": "2" * 64,
         "training_sha256": "3" * 64,
-        "description_model": "mujoco/robot/scene.xml",
+        "description_model": "ver2/mujoco/robot/edu/scene_fixed.xml",
         "joint_order": list(joint_order),
         "observation_terms": ["joint_pos"],
         "action_offsets": [offsets[name] for name in joint_order],
@@ -170,6 +184,7 @@ def _manifest_payload_for(joint_order):
         "description_commit": "test",
         "common_commit": "test",
         "training_commit": "test",
+        **_ROLL_FIELDS,
     }
 
 

@@ -1,4 +1,4 @@
-__version__ = "0.6.0"
+__version__ = "1.0.0"
 
 from .actuators import ACTUATOR_PARAMETERS, CONTROL_GAINS_BY_JOINT
 from .can import FeedbackHub, Motor, drain
@@ -32,7 +32,7 @@ from .limits import (
     exceeds_joint_limit,
     joint_limit_for,
 )
-from .models import ROBOT_MODELS, VER1, VER2_EDU, FootRollClip, RobotModel, robot_model
+from .models import ROBOT_MODELS, VER2_EDU, FootRollClip, RobotModel, robot_model
 from .motors import (
     DEFAULT_VELOCITY_ACCELERATION,
     DEFAULT_VELOCITY_LIMIT_CURRENT,
@@ -137,7 +137,6 @@ __all__ = [
     "sha256_file",
     "uint_to_float",
     "ROBOT_MODELS",
-    "VER1",
     "VER2_EDU",
     "FootRollClip",
     "RobotModel",

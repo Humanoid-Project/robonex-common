@@ -15,6 +15,40 @@ Bump `pyproject.toml` `version` and `__init__.__version__` in the same commit as
 
 <br>
 
+## 1.0.0 — 2026-09-27
+
+**Ver.2 edu only.** The Ver.1 robot is disassembled (user, 2026-09-27); Ver.1 survives only as a record in
+`robonex-description/ver1/`. Major bump: public names removed and every physical value changed.
+
+| Changed | Ver.1 (0.6.0 default) | Ver.2 edu (1.0.0) |
+| --- | --- | --- |
+| `ACTUATED_JOINTS` limits (left; right mirrored), deg | hip yaw ±95, pitch ±100, roll −123/+26, knee −86/+54, ankle upper/lower −35/+33 | hip yaw ±48, pitch ±95, roll −120/+10, knee −70/+10, ankle upper −16/+50, lower −50/+30 |
+| `DEFAULT_JOINT_POS` knee, ankle upper, ankle lower (left), rad | −0.38578, 0.2056595, −0.2056595 | −0.3298657, 0.2125577, −0.2038049 |
+| `ACTION_SCALE_RAD` knee, hip roll, ankle upper, ankle lower | 0.25, 0.152626, 0.1201, 0.131736 | 0.1648, 0.148886, 0.160604, 0.219621 |
+
+- `joints.py` holds the Ver.2 edu table; `models.VER2_EDU` is built from it, so `JOINT_LIMITS_BY_ID` (deploy,
+  motor tests), `limits.joint_limit_for` and `action_normalization` all use Ver.2 edu. Values are identical to
+  0.6.0's `ver2_edu` profile (limits, default pose, normalisation, foot-roll clip), so Ver.2 manifests exported
+  under 0.6.0 still validate.
+- Removed: `models.VER1`, the `ver1` entry of `ROBOT_MODELS`, manifest schema 2 (`SUPPORTED_SCHEMAS = (3,)`).
+  Every function's `model` default is `"ver2_edu"`.
+- Ver.2 edu hip roll: the far fence (−120°) sets the action scale, so the near fence (+10°) sits 1.1 sigma from the
+  default; the fence test states that exception.
+
+<br>
+
+## 0.6.0 — 2026-09-27
+
+Recorded with 1.0.0 (the tag was cut without an entry).
+
+- `models.py`: `RobotModel` / `FootRollClip` profiles `ver1` and `ver2_edu`; `robot_model(name)`.
+- `foot_roll.py`: coupled foot-roll clip (12°, quadratic crank model) in numpy, parity with the training term.
+- Manifest schema 3: `robot_model`, `foot_roll_limit`, `foot_roll_coeffs`, `foot_roll_pairs`; `ActionPipeline`
+  applies the roll clip in float64.
+- `limits` functions take `model=` (default `ver1`).
+
+<br>
+
 ## 0.5.0 — 2026-09-14
 
 Recorded after the fact on 2026-09-24: the tag was cut by hand, not with `setup/release.sh`,
