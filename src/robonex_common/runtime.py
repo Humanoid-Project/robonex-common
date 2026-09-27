@@ -185,7 +185,7 @@ class ActionPipeline:
             upper, lower = sign * float(upper), sign * float(lower)
             changed |= upper != targets[upper_index] or lower != targets[lower_index]
             targets[upper_index], targets[lower_index] = upper, lower
-        return targets.astype(np.float32), changed
+        return targets, changed
 
     def apply(self, raw_action, max_raw_action=None):
         action = np.asarray(raw_action, dtype=np.float32).reshape(-1)
@@ -204,6 +204,7 @@ class ActionPipeline:
         self.runner_clip_count += int(np.count_nonzero(clipped != action))
         self.target_clip_count += int(np.count_nonzero(targets != scaled))
         if self.roll_pairs:
-            targets, rolled = self.clip_roll(targets)
+            rolled_targets, rolled = self.clip_roll(targets)
+            targets = rolled_targets.astype(np.float32)
             self.roll_clip_count += int(rolled)
         return clipped, targets
