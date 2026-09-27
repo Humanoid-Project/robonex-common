@@ -3,6 +3,8 @@ try:
 except ImportError:  # pragma: no cover
     raise ImportError("numpy is required; install robonex-common[policy]")
 
+from .foot_roll import clip_foot_roll
+
 OBSERVATION_TERM_SIZES = (
     ("joint_pos_rel", 12),
     ("joint_vel_rel", 12),
@@ -154,6 +156,36 @@ class ActionPipeline:
         self.policy_call_count = 0
         self.runner_clip_count = 0
         self.target_clip_count = 0
+        self.roll_clip_count = 0
+        self.roll_limit = float(contract.foot_roll_limit)
+        self.roll_coeffs = tuple(contract.foot_roll_coeffs)
+        self.roll_pairs = []
+        if self.roll_limit > 0.0:
+            order = list(contract.joint_order)
+            for upper_name, lower_name, sign in contract.foot_roll_pairs:
+                indices = (order.index(upper_name), order.index(lower_name))
+                bounds = []
+                for index in indices:
+                    low, high = sign * float(self.target_low[index]), sign * float(self.target_high[index])
+                    bounds.append((min(low, high), max(low, high)))
+                self.roll_pairs.append((indices[0], indices[1], float(sign), bounds[0], bounds[1]))
+
+    def clip_roll(self, targets):
+        targets = np.array(targets, dtype=np.float64, copy=True).reshape(-1)
+        changed = False
+        for upper_index, lower_index, sign, upper_range, lower_range in self.roll_pairs:
+            upper, lower = clip_foot_roll(
+                sign * targets[upper_index],
+                sign * targets[lower_index],
+                upper_range,
+                lower_range,
+                self.roll_coeffs,
+                self.roll_limit,
+            )
+            upper, lower = sign * float(upper), sign * float(lower)
+            changed |= upper != targets[upper_index] or lower != targets[lower_index]
+            targets[upper_index], targets[lower_index] = upper, lower
+        return targets.astype(np.float32), changed
 
     def apply(self, raw_action, max_raw_action=None):
         action = np.asarray(raw_action, dtype=np.float32).reshape(-1)
@@ -171,4 +203,7 @@ class ActionPipeline:
         self.policy_call_count += 1
         self.runner_clip_count += int(np.count_nonzero(clipped != action))
         self.target_clip_count += int(np.count_nonzero(targets != scaled))
+        if self.roll_pairs:
+            targets, rolled = self.clip_roll(targets)
+            self.roll_clip_count += int(rolled)
         return clipped, targets

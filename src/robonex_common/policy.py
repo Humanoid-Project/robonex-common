@@ -6,8 +6,11 @@ from pathlib import Path
 
 from .joints import JOINT_BY_MODEL_NAME, PASSIVE_CLOSED_LOOP_JOINTS, POLICY_JOINT_ORDER
 from .limits import action_normalization
+from .models import robot_model
 
 ACTION_CONTRACT_TOLERANCE_RAD = 1.0e-9
+SUPPORTED_SCHEMAS = (2, 3)
+CURRENT_SCHEMA = 3
 
 
 @dataclass(frozen=True)
@@ -32,12 +35,29 @@ class PolicyContract:
     description_commit: str
     common_commit: str
     training_commit: str
+    robot_model: str = "ver1"
+    foot_roll_limit: float = 0.0
+    foot_roll_coeffs: tuple[float, ...] = ()
+    foot_roll_pairs: tuple[tuple[str, str, float], ...] = ()
 
     @classmethod
     def from_dict(cls, data):
         schema_version = int(data.get("schema_version", 0))
-        if schema_version != 2:
+        if schema_version not in SUPPORTED_SCHEMAS:
             raise ValueError(f"unsupported policy manifest schema: {schema_version}")
+        extra = {}
+        if schema_version >= 3:
+            try:
+                extra = dict(
+                    robot_model=str(data["robot_model"]),
+                    foot_roll_limit=float(data["foot_roll_limit"]),
+                    foot_roll_coeffs=tuple(float(value) for value in data["foot_roll_coeffs"]),
+                    foot_roll_pairs=tuple(
+                        (str(pair[0]), str(pair[1]), float(pair[2])) for pair in data["foot_roll_pairs"]
+                    ),
+                )
+            except KeyError as error:
+                raise ValueError(f"policy manifest is missing field: {error.args[0]}") from error
         try:
             contract = cls(
                 schema_version=schema_version,
@@ -60,6 +80,7 @@ class PolicyContract:
                 description_commit=str(data["description_commit"]),
                 common_commit=str(data["common_commit"]),
                 training_commit=str(data["training_commit"]),
+                **extra,
             )
         except KeyError as error:
             raise ValueError(f"policy manifest is missing field: {error.args[0]}") from error
@@ -72,8 +93,19 @@ class PolicyContract:
             return cls.from_dict(json.load(stream))
 
     def validate(self):
-        if self.schema_version != 2:
+        if self.schema_version not in SUPPORTED_SCHEMAS:
             raise ValueError(f"unsupported policy manifest schema: {self.schema_version}")
+        if self.schema_version == 2 and self.robot_model != "ver1":
+            raise ValueError("schema 2 manifests describe the Ver.1 robot only")
+        model = robot_model(self.robot_model)
+        expected_roll = model.foot_roll
+        actual_roll = (self.foot_roll_limit, tuple(self.foot_roll_coeffs), tuple(tuple(p) for p in self.foot_roll_pairs))
+        wanted_roll = (0.0, (), ()) if expected_roll is None else (
+            expected_roll.limit, tuple(expected_roll.coeffs), tuple(tuple(p) for p in expected_roll.pairs))
+        if actual_roll != wanted_roll:
+            raise ValueError(
+                f"foot-roll clip mismatch for {self.robot_model}: manifest {actual_roll}, robonex-common {wanted_roll}"
+            )
         for name, value in (
             ("policy_sha256", self.policy_sha256),
             ("description_sha256", self.description_sha256),
@@ -109,7 +141,7 @@ class PolicyContract:
             raise ValueError("observation_size must be positive")
         if not self.task or not self.description_model or not self.observation_terms:
             raise ValueError("task, description_model, and observation_terms are required")
-        offsets, scales, clips = action_normalization()
+        offsets, scales, clips = action_normalization(model=self.robot_model)
         for index, name in enumerate(self.joint_order):
             expected = (offsets[name], scales[name], clips[name][0], clips[name][1])
             actual = (
@@ -127,7 +159,7 @@ class PolicyContract:
                 )
 
     def to_dict(self):
-        return {
+        data = {
             "schema_version": self.schema_version,
             "task": self.task,
             "policy_file": self.policy_file,
@@ -149,6 +181,14 @@ class PolicyContract:
             "common_commit": self.common_commit,
             "training_commit": self.training_commit,
         }
+        if self.schema_version >= 3:
+            data.update(
+                robot_model=self.robot_model,
+                foot_roll_limit=self.foot_roll_limit,
+                foot_roll_coeffs=list(self.foot_roll_coeffs),
+                foot_roll_pairs=[list(pair) for pair in self.foot_roll_pairs],
+            )
+        return data
 
     def save(self, path):
         with Path(path).open("w", encoding="utf-8") as stream:
