@@ -1,4 +1,4 @@
-from .joints import ACTUATED_JOINTS
+from .joints import ACTUATED_JOINTS, ALL_MOTORS
 from .motors import (
     JOINT_CONTROL_GAINS,
     MOTOR_PHYSICS,
@@ -12,7 +12,7 @@ def _joint_role(model_name):
 
 
 CONTROL_GAINS_BY_JOINT = {
-    joint.model_name: JOINT_CONTROL_GAINS[_joint_role(joint.model_name)] for joint in ACTUATED_JOINTS
+    joint.model_name: JOINT_CONTROL_GAINS[_joint_role(joint.model_name)] for joint in ALL_MOTORS
 }
 
 ACTUATOR_PARAMETERS = {

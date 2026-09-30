@@ -28,6 +28,12 @@ JOINT_CONTROL_GAINS = {
     "knee_pitch": (150.0, 4.0),
     "ankle_upper": (40.0, 2.0),
     "ankle_lower": (40.0, 2.0),
+    "neck_pitch": (20.0, 1.0),
+    "neck_yaw": (20.0, 1.0),
+    "shoulder_pitch": (40.0, 2.0),
+    "shoulder_roll": (40.0, 2.0),
+    "shoulder_yaw": (40.0, 2.0),
+    "elbow": (40.0, 2.0),
 }
 MOTOR_PHYSICS = {
     "rs02": {

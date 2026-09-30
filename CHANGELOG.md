@@ -15,6 +15,41 @@ Bump `pyproject.toml` `version` and `__init__.__version__` in the same commit as
 
 <br>
 
+## 1.2.0 — 2026-09-30
+
+**Head 13–14, arms 15–18 / 20–23, per-variant motor sets.** Minor bump: new constants, functions and physical table
+entries; nothing renamed or removed. The 12-joint policy contract is byte-identical to 1.1.0 (`ACTUATED_JOINTS`,
+`POLICY_JOINT_ORDER`, `JOINT_BY_ID`, `CHANNEL_MOTOR_IDS`, `DEFAULT_JOINT_POS`, `action_normalization`,
+`ACTION_SCALE_RAD`, `ACTUATOR_PARAMETERS`, `VER2_EDU` leg tables and foot-roll clip).
+
+| Group | IDs | Joints | Motor | Default CAN | edu | pro | max |
+| --- | --- | --- | --- | --- | :---: | :---: | :---: |
+| left_leg | 1–6 | as 1.1.0 | rs02/rs03 | can0 | ✓ | ✓ | ✓ |
+| right_leg | 7–12 | as 1.1.0 | rs02/rs03 | can1 | ✓ | ✓ | ✓ |
+| head | 13, 14 | `neck_pitch_joint`, `neck_yaw_joint` | rs05 | can4 | 13 | 13 | 13, 14 |
+| left_arm | 15–18 | `l_shoulder_pitch/roll/yaw_joint`, `l_elbow_joint` | rs02 | can2 | - | ✓ | ✓ |
+| right_arm | 20–23 | `r_shoulder_pitch/roll/yaw_joint`, `r_elbow_joint` | rs02 | can3 | - | ✓ | ✓ |
+| - | 19 | unused | | | | | |
+
+**PLACEHOLDER values — not measured, do not trust on hardware:** head limits ±30° (±0.523599 rad, open item H29),
+arm limits ±45° (±0.785398 rad), head gains kp 20 / kd 1, arm gains kp 40 / kd 2.
+
+- `joints.py`: `AUXILIARY_JOINTS` adds IDs 14–18 and 20–23 (table above); `GROUP_ID_RANGES` head 13–14, left_arm
+  15–18, right_arm 20–23 (was 13 / 14–17 / 18–21). New `VARIANT_MOTOR_IDS` and `motors_for_variant(name)`.
+  `ALL_CHANNEL_MOTOR_IDS` now spans five channels with the default bus map.
+- `models.py`: `RobotModel` gains `motor_ids` and `leg_profile`. New `VER2_PRO`, `VER2_MAX` (same leg limits,
+  default pose and foot-roll clip as `VER2_EDU`), `VARIANTS` (all three), `LEG_PROFILES` (alias of `ROBOT_MODELS`) and
+  `leg_profile(name)`. `ROBOT_MODELS` stays at the leg-profile level (`ver2_edu` only), so callers that infer the
+  profile from a checkpoint or a MuJoCo model by requiring exactly one match keep working unchanged.
+  `robot_model(name)` resolves variant names too, so manifests and `joint_limit_for(..., model=)` accept
+  `ver2_pro` / `ver2_max`.
+- `motors.py`: `JOINT_CONTROL_GAINS` entries `neck_pitch`, `neck_yaw`, `shoulder_pitch`, `shoulder_roll`,
+  `shoulder_yaw`, `elbow` (placeholders). `MOTOR_PHYSICS` unchanged (no `rs05`).
+- `actuators.py`: `CONTROL_GAINS_BY_JOINT` covers every motor in `ALL_MOTORS` (was the 12 legs; ID 13 had no entry).
+  `ACTUATOR_PARAMETERS` still lists only the 12 simulated leg joints.
+
+<br>
+
 ## 1.1.0 — 2026-09-30
 
 **Head motor and per-machine CAN channel map.** Minor bump: new constants and one new physical table

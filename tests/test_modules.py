@@ -320,14 +320,14 @@ def test_auxiliary_motors_extend_the_policy_joints_without_changing_them():
     )
     from robonex_common.limits import joint_limit_for
 
-    assert tuple(joint.motor_id for joint in AUXILIARY_JOINTS) == (13,)
+    assert tuple(joint.motor_id for joint in AUXILIARY_JOINTS) == (13, 14, 15, 16, 17, 18, 20, 21, 22, 23)
     head = MOTOR_BY_ID[13]
     assert head.model_name == "neck_pitch_joint"
     assert head.motor_model == "rs05"
     assert head.group == "head"
     assert 13 not in JOINT_BY_ID
-    assert len(ALL_MOTORS) == 13
-    assert len({joint.motor_id for joint in ALL_MOTORS}) == 13
+    assert len(ALL_MOTORS) == 22
+    assert len({joint.motor_id for joint in ALL_MOTORS}) == 22
     for joint in ALL_MOTORS:
         assert joint.motor_id in GROUP_ID_RANGES[joint.group], joint.model_name
     ranges = list(GROUP_ID_RANGES.values())
@@ -347,7 +347,13 @@ def test_bus_map_defaults_and_config_file(tmp_path, monkeypatch):
     monkeypatch.setenv(buses.BUS_MAP_ENV, str(tmp_path / "missing.json"))
     buses.bus_map.cache_clear()
     assert buses.bus_map() == buses.DEFAULT_BUS_MAP
-    assert motor_ids_by_channel(ALL_MOTORS) == {"can0": tuple(range(1, 7)), "can1": tuple(range(7, 13)), "can4": (13,)}
+    assert motor_ids_by_channel(ALL_MOTORS) == {
+        "can0": tuple(range(1, 7)),
+        "can1": tuple(range(7, 13)),
+        "can2": tuple(range(15, 19)),
+        "can3": tuple(range(20, 24)),
+        "can4": (13, 14),
+    }
 
     path = tmp_path / "bus_map.json"
     path.write_text('{"head": "can0"}', encoding="utf-8")
@@ -355,7 +361,7 @@ def test_bus_map_defaults_and_config_file(tmp_path, monkeypatch):
     buses.bus_map.cache_clear()
     assert buses.channel_for_group("head") == "can0"
     assert buses.channel_for_group("left_leg") == "can0"
-    assert motor_ids_by_channel(ALL_MOTORS)["can0"] == tuple(range(1, 7)) + (13,)
+    assert motor_ids_by_channel(ALL_MOTORS)["can0"] == tuple(range(1, 7)) + (13, 14)
 
     path.write_text('{"tail": "can9"}', encoding="utf-8")
     buses.bus_map.cache_clear()

@@ -1,4 +1,4 @@
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 
 from .actuators import ACTUATOR_PARAMETERS, CONTROL_GAINS_BY_JOINT
 from .buses import BUS_MAP_FILE, DEFAULT_BUS_MAP, GROUPS, bus_map, channel_for_group
@@ -26,9 +26,11 @@ from .joints import (
     JOINT_LIMITS_BY_NAME,
     PASSIVE_CLOSED_LOOP_JOINTS,
     POLICY_JOINT_ORDER,
+    VARIANT_MOTOR_IDS,
     JointSpec,
     channel_for_motor_id,
     motor_ids_by_channel,
+    motors_for_variant,
 )
 from .limits import (
     ACTION_SCALE_RAD,
@@ -40,7 +42,18 @@ from .limits import (
     exceeds_joint_limit,
     joint_limit_for,
 )
-from .models import ROBOT_MODELS, VER2_EDU, FootRollClip, RobotModel, robot_model
+from .models import (
+    LEG_PROFILES,
+    ROBOT_MODELS,
+    VARIANTS,
+    VER2_EDU,
+    VER2_MAX,
+    VER2_PRO,
+    FootRollClip,
+    RobotModel,
+    leg_profile,
+    robot_model,
+)
 from .motors import (
     DEFAULT_VELOCITY_ACCELERATION,
     DEFAULT_VELOCITY_LIMIT_CURRENT,
@@ -95,6 +108,8 @@ __all__ = [
     "bus_map",
     "channel_for_group",
     "motor_ids_by_channel",
+    "motors_for_variant",
+    "VARIANT_MOTOR_IDS",
     "ACTUATOR_PARAMETERS",
     "CONTROL_GAINS_BY_JOINT",
     "BALANCING_REPO_NAMES",
@@ -156,9 +171,14 @@ __all__ = [
     "resolve_repo",
     "sha256_file",
     "uint_to_float",
+    "LEG_PROFILES",
     "ROBOT_MODELS",
+    "VARIANTS",
     "VER2_EDU",
+    "VER2_MAX",
+    "VER2_PRO",
     "FootRollClip",
     "RobotModel",
+    "leg_profile",
     "robot_model",
 ]

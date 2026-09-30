@@ -35,14 +35,28 @@ ACTUATED_JOINTS = (
 
 AUXILIARY_JOINTS = (
     JointSpec(13, "neck_pitch_joint", "neck_pitch", "rs05", "head", -0.523599, 0.523599),
+    JointSpec(14, "neck_yaw_joint", "neck_yaw", "rs05", "head", -0.523599, 0.523599),
+    JointSpec(15, "l_shoulder_pitch_joint", "left_shoulder_pitch", "rs02", "left_arm", -0.785398, 0.785398),
+    JointSpec(16, "l_shoulder_roll_joint", "left_shoulder_roll", "rs02", "left_arm", -0.785398, 0.785398),
+    JointSpec(17, "l_shoulder_yaw_joint", "left_shoulder_yaw", "rs02", "left_arm", -0.785398, 0.785398),
+    JointSpec(18, "l_elbow_joint", "left_elbow", "rs02", "left_arm", -0.785398, 0.785398),
+    JointSpec(20, "r_shoulder_pitch_joint", "right_shoulder_pitch", "rs02", "right_arm", -0.785398, 0.785398),
+    JointSpec(21, "r_shoulder_roll_joint", "right_shoulder_roll", "rs02", "right_arm", -0.785398, 0.785398),
+    JointSpec(22, "r_shoulder_yaw_joint", "right_shoulder_yaw", "rs02", "right_arm", -0.785398, 0.785398),
+    JointSpec(23, "r_elbow_joint", "right_elbow", "rs02", "right_arm", -0.785398, 0.785398),
 )
 ALL_MOTORS = ACTUATED_JOINTS + AUXILIARY_JOINTS
 GROUP_ID_RANGES = {
     "left_leg": range(1, 7),
     "right_leg": range(7, 13),
-    "head": range(13, 14),
-    "left_arm": range(14, 18),
-    "right_arm": range(18, 22),
+    "head": range(13, 15),
+    "left_arm": range(15, 19),
+    "right_arm": range(20, 24),
+}
+VARIANT_MOTOR_IDS = {
+    "ver2_edu": tuple(range(1, 14)),
+    "ver2_pro": tuple(range(1, 14)) + tuple(range(15, 19)) + tuple(range(20, 24)),
+    "ver2_max": tuple(range(1, 15)) + tuple(range(15, 19)) + tuple(range(20, 24)),
 }
 
 JOINT_BY_ID = {joint.motor_id: joint for joint in ACTUATED_JOINTS}
@@ -102,6 +116,13 @@ PASSIVE_CLOSED_LOOP_JOINTS = (
     "l_ankle_pitch_joint",
     "r_ankle_pitch_joint",
 )
+
+
+def motors_for_variant(name):
+    ids = VARIANT_MOTOR_IDS.get(name)
+    if ids is None:
+        raise ValueError(f"unknown robot variant {name!r}; known: {', '.join(sorted(VARIANT_MOTOR_IDS))}")
+    return tuple(MOTOR_BY_ID[motor_id] for motor_id in ids)
 
 
 def channel_for_motor_id(motor_id):

@@ -12,6 +12,8 @@ robonex-common/
 │   ├── motors.py
 │   ├── actuators.py
 │   ├── limits.py
+│   ├── models.py
+│   ├── buses.py
 │   ├── protocol.py
 │   ├── can.py
 │   ├── imu.py
@@ -34,12 +36,23 @@ robonex-common/
 | `motors` | RS02/RS03/RS05 specs, `MOTOR_PHYSICS`, kp/kd, rated/peak torque | - |
 | `actuators` | `ACTUATOR_PARAMETERS` (stiffness/damping/armature/friction) | - |
 | `limits` | Joint limits, `action_normalization` | - |
+| `models` | `ROBOT_MODELS` (leg profiles), `VARIANTS` edu/pro/max with `motor_ids`, `leg_profile` | - |
 | `protocol` | CAN type/index constants, `build_arbitration_id`, `decode_fault_bits` | - |
 | `can` | `Motor`, `FeedbackHub`, `drain` | `can` |
 | `imu` | N100 port/baudrate, `MOUNT_ROLL_DEG` | - |
 | `paths` | `resolve_repo`, `repo_file`, `description_model`, `git_commit` | - |
 | `policy` | `PolicyContract` manifest read/write, policy/model/source SHA-256 | - |
 | `runtime` | `ActionPipeline`, `assemble_observation` | `policy` |
+
+| Group | Motor IDs | Motor | Default CAN | edu | pro | max |
+| --- | --- | --- | --- | :---: | :---: | :---: |
+| left_leg | 1–6 | RS02/RS03 | can0 | ✓ | ✓ | ✓ |
+| right_leg | 7–12 | RS02/RS03 | can1 | ✓ | ✓ | ✓ |
+| head | 13 neck pitch, 14 neck yaw | RS05 | can4 | 13 | 13 | 13, 14 |
+| left_arm | 15–18 | RS02 | can2 | - | ✓ | ✓ |
+| right_arm | 20–23 | RS02 | can3 | - | ✓ | ✓ |
+
+Head/arm limits (±30° / ±45°) and gains (kp 20 kd 1 / kp 40 kd 2) are PLACEHOLDERS until measured.
 
 <br>
 
