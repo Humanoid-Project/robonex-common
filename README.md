@@ -48,7 +48,7 @@ robonex-common/
 | --- | --- | --- | --- | :---: | :---: | :---: |
 | left_leg | 1–6 | RS02/RS03 | can0 | ✓ | ✓ | ✓ |
 | right_leg | 7–12 | RS02/RS03 | can1 | ✓ | ✓ | ✓ |
-| head | 13 neck pitch, 14 neck yaw | RS05 | can4 | 13 | 13 | 13, 14 |
+| head | 13 neck pitch (14 reserved, no motor yet) | RS05 | can4 | 13 | 13 | 13 |
 | left_arm | 15–18 | RS02 | can2 | - | ✓ | ✓ |
 | right_arm | 20–23 | RS02 | can3 | - | ✓ | ✓ |
 

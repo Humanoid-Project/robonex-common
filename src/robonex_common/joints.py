@@ -35,7 +35,7 @@ ACTUATED_JOINTS = (
 
 AUXILIARY_JOINTS = (
     JointSpec(13, "neck_pitch_joint", "neck_pitch", "rs05", "head", -0.523599, 0.523599),
-    JointSpec(14, "neck_yaw_joint", "neck_yaw", "rs05", "head", -0.523599, 0.523599),
+    # JointSpec(14, "neck_yaw_joint", "neck_yaw", "rs05", "head", -0.523599, 0.523599),
     JointSpec(15, "l_shoulder_pitch_joint", "left_shoulder_pitch", "rs02", "left_arm", -0.785398, 0.785398),
     JointSpec(16, "l_shoulder_roll_joint", "left_shoulder_roll", "rs02", "left_arm", -0.785398, 0.785398),
     JointSpec(17, "l_shoulder_yaw_joint", "left_shoulder_yaw", "rs02", "left_arm", -0.785398, 0.785398),
@@ -56,7 +56,7 @@ GROUP_ID_RANGES = {
 VARIANT_MOTOR_IDS = {
     "ver2_edu": tuple(range(1, 14)),
     "ver2_pro": tuple(range(1, 14)) + tuple(range(15, 19)) + tuple(range(20, 24)),
-    "ver2_max": tuple(range(1, 15)) + tuple(range(15, 19)) + tuple(range(20, 24)),
+    "ver2_max": tuple(range(1, 14)) + tuple(range(15, 19)) + tuple(range(20, 24)),
 }
 
 JOINT_BY_ID = {joint.motor_id: joint for joint in ACTUATED_JOINTS}

@@ -24,7 +24,7 @@ from robonex_common.policy import PolicyContract
 from test_ver2_profile import _load, _payload
 
 LEGS = tuple(range(1, 13))
-HEAD_PITCH, HEAD_YAW = (13,), (14,)
+HEAD_PITCH, HEAD_YAW = (13,), ()
 LEFT_ARM, RIGHT_ARM = (15, 16, 17, 18), (20, 21, 22, 23)
 
 
@@ -44,7 +44,6 @@ def test_variant_motor_sets_match_the_layout_table():
 def test_new_motor_names_and_models():
     expected = {
         13: ("neck_pitch_joint", "neck_pitch", "rs05", "head"),
-        14: ("neck_yaw_joint", "neck_yaw", "rs05", "head"),
         15: ("l_shoulder_pitch_joint", "left_shoulder_pitch", "rs02", "left_arm"),
         16: ("l_shoulder_roll_joint", "left_shoulder_roll", "rs02", "left_arm"),
         17: ("l_shoulder_yaw_joint", "left_shoulder_yaw", "rs02", "left_arm"),
@@ -79,7 +78,7 @@ def test_group_ranges_are_disjoint_and_19_is_unused():
 
 def test_every_motor_has_a_gain_a_limit_and_a_group_in_range():
     assert set(CONTROL_GAINS_BY_JOINT) == {joint.model_name for joint in ALL_MOTORS}
-    assert set(MOTOR_LIMITS_BY_ID) == set(MOTOR_BY_ID) == set(LEGS) | set(range(13, 19)) | set(range(20, 24))
+    assert set(MOTOR_LIMITS_BY_ID) == set(MOTOR_BY_ID) == set(LEGS) | {13} | set(range(15, 19)) | set(range(20, 24))
     for joint in ALL_MOTORS:
         kp, kd = CONTROL_GAINS_BY_JOINT[joint.model_name]
         spec = MOTOR_SPECS[joint.motor_model]
@@ -92,11 +91,11 @@ def test_every_motor_has_a_gain_a_limit_and_a_group_in_range():
 
 
 def test_placeholder_gains_and_limits():
-    for role in ("neck_pitch", "neck_yaw"):
+    for role in ("neck_pitch",):
         assert JOINT_CONTROL_GAINS[role] == (20.0, 1.0)
     for role in ("shoulder_pitch", "shoulder_roll", "shoulder_yaw", "elbow"):
         assert JOINT_CONTROL_GAINS[role] == (40.0, 2.0)
-    for motor_id in (13, 14):
+    for motor_id in (13,):
         assert MOTOR_LIMITS_BY_ID[motor_id] == pytest.approx((-0.523599, 0.523599))
     for motor_id in LEFT_ARM + RIGHT_ARM:
         assert MOTOR_LIMITS_BY_ID[motor_id] == pytest.approx((-0.785398, 0.785398))

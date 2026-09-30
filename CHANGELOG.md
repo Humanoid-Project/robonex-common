@@ -17,7 +17,7 @@ Bump `pyproject.toml` `version` and `__init__.__version__` in the same commit as
 
 ## 1.2.0 — 2026-09-30
 
-**Head 13–14, arms 15–18 / 20–23, per-variant motor sets.** Minor bump: new constants, functions and physical table
+**Head 13 (14 reserved for neck yaw, commented out until the motor exists), arms 15–18 / 20–23, per-variant motor sets.** Minor bump: new constants, functions and physical table
 entries; nothing renamed or removed. The 12-joint policy contract is byte-identical to 1.1.0 (`ACTUATED_JOINTS`,
 `POLICY_JOINT_ORDER`, `JOINT_BY_ID`, `CHANNEL_MOTOR_IDS`, `DEFAULT_JOINT_POS`, `action_normalization`,
 `ACTION_SCALE_RAD`, `ACTUATOR_PARAMETERS`, `VER2_EDU` leg tables and foot-roll clip).
@@ -26,7 +26,7 @@ entries; nothing renamed or removed. The 12-joint policy contract is byte-identi
 | --- | --- | --- | --- | --- | :---: | :---: | :---: |
 | left_leg | 1–6 | as 1.1.0 | rs02/rs03 | can0 | ✓ | ✓ | ✓ |
 | right_leg | 7–12 | as 1.1.0 | rs02/rs03 | can1 | ✓ | ✓ | ✓ |
-| head | 13, 14 | `neck_pitch_joint`, `neck_yaw_joint` | rs05 | can4 | 13 | 13 | 13, 14 |
+| head | 13 (14 reserved for neck yaw, no motor yet — commented out) | `neck_pitch_joint` | rs05 | can4 | 13 | 13 | 13 |
 | left_arm | 15–18 | `l_shoulder_pitch/roll/yaw_joint`, `l_elbow_joint` | rs02 | can2 | - | ✓ | ✓ |
 | right_arm | 20–23 | `r_shoulder_pitch/roll/yaw_joint`, `r_elbow_joint` | rs02 | can3 | - | ✓ | ✓ |
 | - | 19 | unused | | | | | |
