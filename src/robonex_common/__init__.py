@@ -1,6 +1,7 @@
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 from .actuators import ACTUATOR_PARAMETERS, CONTROL_GAINS_BY_JOINT
+from .buses import BUS_MAP_FILE, DEFAULT_BUS_MAP, GROUPS, bus_map, channel_for_group
 from .can import FeedbackHub, Motor, drain
 from .imu import (
     DEFAULT_IMU_BAUDRATE,
@@ -10,7 +11,13 @@ from .imu import (
 )
 from .joints import (
     ACTUATED_JOINTS,
+    ALL_CHANNEL_MOTOR_IDS,
+    ALL_MOTORS,
+    AUXILIARY_JOINTS,
     CHANNEL_MOTOR_IDS,
+    GROUP_ID_RANGES,
+    MOTOR_BY_ID,
+    MOTOR_LIMITS_BY_ID,
     DEFAULT_JOINT_POS,
     JOINT_BY_HARDWARE_NAME,
     JOINT_BY_ID,
@@ -21,6 +28,7 @@ from .joints import (
     POLICY_JOINT_ORDER,
     JointSpec,
     channel_for_motor_id,
+    motor_ids_by_channel,
 )
 from .limits import (
     ACTION_SCALE_RAD,
@@ -75,6 +83,18 @@ from .protocol import (
 __all__ = [
     "ACTION_SCALE_RAD",
     "ACTUATED_JOINTS",
+    "ALL_CHANNEL_MOTOR_IDS",
+    "ALL_MOTORS",
+    "AUXILIARY_JOINTS",
+    "BUS_MAP_FILE",
+    "DEFAULT_BUS_MAP",
+    "GROUPS",
+    "GROUP_ID_RANGES",
+    "MOTOR_BY_ID",
+    "MOTOR_LIMITS_BY_ID",
+    "bus_map",
+    "channel_for_group",
+    "motor_ids_by_channel",
     "ACTUATOR_PARAMETERS",
     "CONTROL_GAINS_BY_JOINT",
     "BALANCING_REPO_NAMES",

@@ -15,6 +15,23 @@ Bump `pyproject.toml` `version` and `__init__.__version__` in the same commit as
 
 <br>
 
+## 1.1.0 — 2026-09-30
+
+**Head motor and per-machine CAN channel map.** Minor bump: new constants and one new physical table
+entry; the 12-joint policy contract (`ACTUATED_JOINTS`, `POLICY_JOINT_ORDER`, `RobotModel`) is unchanged.
+
+- `motors.py`: `rs05` spec (MIT ranges ±12.57 rad, ±50 rad/s, ±5.5 N·m, kp 0–500, kd 0–5; rated 1.6, peak 5.5 N·m,
+  no-load 50.3 rad/s). No `MOTOR_PHYSICS` entry (armature not measured), so `ACTUATOR_PARAMETERS` has no `rs05`.
+- `joints.py`: `JointSpec.channel` is now a property derived from a new `group` field (`left_leg`, `right_leg`,
+  `left_arm`, `right_arm`, `head`). `AUXILIARY_JOINTS` = ID 13 `neck_pitch_joint` (rs05, head, ±30° placeholder until
+  measured), `ALL_MOTORS`, `MOTOR_BY_ID`, `MOTOR_LIMITS_BY_ID`, `GROUP_ID_RANGES` (legs 1–6 / 7–12, head 13, arms
+  14–17 / 18–21 reserved), `motor_ids_by_channel()`, `ALL_CHANNEL_MOTOR_IDS`. `channel_for_motor_id` covers ID 13.
+- `buses.py`: `DEFAULT_BUS_MAP` (`left_leg can0, right_leg can1, left_arm can2, right_arm can3, head can4`),
+  overridden per machine by `~/.config/robonex/bus_map.json` (or the file named by `ROBONEX_BUS_MAP`).
+- `limits.joint_limit_for` / `exceeds_joint_limit` fall back to `MOTOR_LIMITS_BY_ID` for motors outside the policy model.
+
+<br>
+
 ## 1.0.0 — 2026-09-27
 
 **Ver.2 edu only.** The Ver.1 robot is disassembled (user, 2026-09-27); Ver.1 survives only as a record in

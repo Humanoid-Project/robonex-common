@@ -29,8 +29,9 @@ robonex-common/
 
 | Module | Contents | Extra |
 | --- | --- | :---: |
-| `joints` | Motor ID, CAN channel, joint names, `POLICY_JOINT_ORDER`, `channel_for_motor_id` | - |
-| `motors` | RS02/RS03 specs, `MOTOR_PHYSICS`, kp/kd, rated/peak torque | - |
+| `joints` | Motor ID, group, joint names, `ACTUATED_JOINTS` (policy), `AUXILIARY_JOINTS` (head), `ALL_MOTORS`, `POLICY_JOINT_ORDER`, `channel_for_motor_id` | - |
+| `buses` | Motor group → CAN channel (`DEFAULT_BUS_MAP`, `~/.config/robonex/bus_map.json`, `ROBONEX_BUS_MAP`) | - |
+| `motors` | RS02/RS03/RS05 specs, `MOTOR_PHYSICS`, kp/kd, rated/peak torque | - |
 | `actuators` | `ACTUATOR_PARAMETERS` (stiffness/damping/armature/friction) | - |
 | `limits` | Joint limits, `action_normalization` | - |
 | `protocol` | CAN type/index constants, `build_arbitration_id`, `decode_fault_bits` | - |

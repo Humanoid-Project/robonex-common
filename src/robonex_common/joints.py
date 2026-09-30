@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 
+from .buses import GROUPS, bus_map, channel_for_group
+
 
 @dataclass(frozen=True)
 class JointSpec:
@@ -7,27 +9,45 @@ class JointSpec:
     model_name: str
     hardware_name: str
     motor_model: str
-    channel: str
+    group: str
     lower: float
     upper: float
 
+    @property
+    def channel(self):
+        return channel_for_group(self.group)
+
 
 ACTUATED_JOINTS = (
-    JointSpec(1, "l_hip_yaw_joint", "left_hip_yaw", "rs02", "can0", -0.837758, 0.837758),
-    JointSpec(2, "l_hip_pitch_joint", "left_hip_pitch", "rs03", "can0", -1.658063, 1.658063),
-    JointSpec(3, "l_hip_roll_joint", "left_hip_roll", "rs03", "can0", -2.094395, 0.174533),
-    JointSpec(4, "l_knee_pitch_joint", "left_knee_pitch", "rs03", "can0", -1.22173, 0.174533),
-    JointSpec(5, "l_ankle_upper_joint", "left_ankle_upper", "rs02", "can0", -0.279253, 0.872665),
-    JointSpec(6, "l_ankle_lower_joint", "left_ankle_lower", "rs02", "can0", -0.872665, 0.523599),
-    JointSpec(7, "r_hip_yaw_joint", "right_hip_yaw", "rs02", "can1", -0.837758, 0.837758),
-    JointSpec(8, "r_hip_pitch_joint", "right_hip_pitch", "rs03", "can1", -1.658063, 1.658063),
-    JointSpec(9, "r_hip_roll_joint", "right_hip_roll", "rs03", "can1", -0.174533, 2.094395),
-    JointSpec(10, "r_knee_pitch_joint", "right_knee_pitch", "rs03", "can1", -0.174533, 1.22173),
-    JointSpec(11, "r_ankle_upper_joint", "right_ankle_upper", "rs02", "can1", -0.872665, 0.279253),
-    JointSpec(12, "r_ankle_lower_joint", "right_ankle_lower", "rs02", "can1", -0.523599, 0.872665),
+    JointSpec(1, "l_hip_yaw_joint", "left_hip_yaw", "rs02", "left_leg", -0.837758, 0.837758),
+    JointSpec(2, "l_hip_pitch_joint", "left_hip_pitch", "rs03", "left_leg", -1.658063, 1.658063),
+    JointSpec(3, "l_hip_roll_joint", "left_hip_roll", "rs03", "left_leg", -2.094395, 0.174533),
+    JointSpec(4, "l_knee_pitch_joint", "left_knee_pitch", "rs03", "left_leg", -1.22173, 0.174533),
+    JointSpec(5, "l_ankle_upper_joint", "left_ankle_upper", "rs02", "left_leg", -0.279253, 0.872665),
+    JointSpec(6, "l_ankle_lower_joint", "left_ankle_lower", "rs02", "left_leg", -0.872665, 0.523599),
+    JointSpec(7, "r_hip_yaw_joint", "right_hip_yaw", "rs02", "right_leg", -0.837758, 0.837758),
+    JointSpec(8, "r_hip_pitch_joint", "right_hip_pitch", "rs03", "right_leg", -1.658063, 1.658063),
+    JointSpec(9, "r_hip_roll_joint", "right_hip_roll", "rs03", "right_leg", -0.174533, 2.094395),
+    JointSpec(10, "r_knee_pitch_joint", "right_knee_pitch", "rs03", "right_leg", -0.174533, 1.22173),
+    JointSpec(11, "r_ankle_upper_joint", "right_ankle_upper", "rs02", "right_leg", -0.872665, 0.279253),
+    JointSpec(12, "r_ankle_lower_joint", "right_ankle_lower", "rs02", "right_leg", -0.523599, 0.872665),
 )
 
+AUXILIARY_JOINTS = (
+    JointSpec(13, "neck_pitch_joint", "neck_pitch", "rs05", "head", -0.523599, 0.523599),
+)
+ALL_MOTORS = ACTUATED_JOINTS + AUXILIARY_JOINTS
+GROUP_ID_RANGES = {
+    "left_leg": range(1, 7),
+    "right_leg": range(7, 13),
+    "head": range(13, 14),
+    "left_arm": range(14, 18),
+    "right_arm": range(18, 22),
+}
+
 JOINT_BY_ID = {joint.motor_id: joint for joint in ACTUATED_JOINTS}
+MOTOR_BY_ID = {joint.motor_id: joint for joint in ALL_MOTORS}
+MOTOR_LIMITS_BY_ID = {joint.motor_id: (joint.lower, joint.upper) for joint in ALL_MOTORS}
 JOINT_BY_MODEL_NAME = {joint.model_name: joint for joint in ACTUATED_JOINTS}
 JOINT_BY_HARDWARE_NAME = {joint.hardware_name: joint for joint in ACTUATED_JOINTS}
 JOINT_LIMITS_BY_ID = {joint.motor_id: (joint.lower, joint.upper) for joint in ACTUATED_JOINTS}
@@ -46,10 +66,18 @@ DEFAULT_JOINT_POS = {
     "r_ankle_upper_joint": -0.21255773798848565,
     "r_ankle_lower_joint": 0.2038048914121279,
 }
-CHANNEL_MOTOR_IDS = {
-    "can0": tuple(joint.motor_id for joint in ACTUATED_JOINTS if joint.channel == "can0"),
-    "can1": tuple(joint.motor_id for joint in ACTUATED_JOINTS if joint.channel == "can1"),
-}
+
+
+def motor_ids_by_channel(motors=ACTUATED_JOINTS, mapping=None):
+    mapping = bus_map() if mapping is None else mapping
+    channels = {}
+    for joint in motors:
+        channels.setdefault(channel_for_group(joint.group, mapping), []).append(joint.motor_id)
+    return {channel: tuple(ids) for channel, ids in channels.items()}
+
+
+CHANNEL_MOTOR_IDS = motor_ids_by_channel()
+ALL_CHANNEL_MOTOR_IDS = motor_ids_by_channel(ALL_MOTORS)
 POLICY_JOINT_ORDER = (
     "l_hip_yaw_joint",
     "r_hip_yaw_joint",
@@ -77,7 +105,7 @@ PASSIVE_CLOSED_LOOP_JOINTS = (
 
 
 def channel_for_motor_id(motor_id):
-    joint = JOINT_BY_ID.get(motor_id)
+    joint = MOTOR_BY_ID.get(motor_id)
     if joint is None:
         raise ValueError(f"No CAN channel for motor ID {motor_id}")
     return joint.channel

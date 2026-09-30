@@ -1,6 +1,6 @@
 import math
 
-from .joints import JOINT_LIMITS_BY_NAME
+from .joints import JOINT_LIMITS_BY_NAME, MOTOR_LIMITS_BY_ID
 from .models import robot_model
 
 
@@ -32,7 +32,13 @@ def _action_scale(name, margin=DEFAULT_ACTION_MARGIN_RAD, model="ver2_edu"):
 
 ACTION_SCALE_RAD = {name: _action_scale(name) for name in JOINT_LIMITS_BY_NAME}
 def joint_limit_for(motor_id, margin=DEFAULT_LIMIT_MARGIN_RAD, model="ver2_edu"):
-    lower, upper = robot_model(model).joint_limits_by_id()[motor_id]
+    limits = robot_model(model).joint_limits_by_id()
+    if motor_id in limits:
+        lower, upper = limits[motor_id]
+    elif motor_id in MOTOR_LIMITS_BY_ID:
+        lower, upper = MOTOR_LIMITS_BY_ID[motor_id]
+    else:
+        raise KeyError(f"no joint limit for motor {motor_id}")
     if margin < 0.0 or lower + margin >= upper - margin:
         raise ValueError(f"invalid joint-limit margin for motor {motor_id}: {margin}")
     return lower + margin, upper - margin
