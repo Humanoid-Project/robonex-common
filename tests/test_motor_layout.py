@@ -96,8 +96,10 @@ def test_placeholder_gains_and_limits():
     for role in ("shoulder_pitch", "shoulder_roll", "shoulder_yaw", "elbow"):
         assert JOINT_CONTROL_GAINS[role] == (40.0, 2.0)
     for motor_id in (13,):
-        assert MOTOR_LIMITS_BY_ID[motor_id] == pytest.approx((-0.523599, 0.523599))
-    for motor_id in LEFT_ARM + RIGHT_ARM:
+        assert MOTOR_LIMITS_BY_ID[motor_id] == pytest.approx((-1.27409, 1.27409))
+    for motor_id in (15, 20):
+        assert MOTOR_LIMITS_BY_ID[motor_id] == pytest.approx((-1.745329, 1.745329))
+    for motor_id in (16, 17, 18, 21, 22, 23):
         assert MOTOR_LIMITS_BY_ID[motor_id] == pytest.approx((-0.785398, 0.785398))
 
 
@@ -144,7 +146,7 @@ def test_variant_names_resolve_to_the_single_leg_profile():
         for motor_id in LEGS:
             assert joint_limit_for(motor_id, model=name) == joint_limit_for(motor_id)
         assert exceeds_joint_limit(0.0, 20, model=name) is False
-        assert exceeds_joint_limit(0.8, 20, model=name) is True
+        assert exceeds_joint_limit(1.8, 20, model=name) is True
     assert leg_profile("ver2_edu") is VER2_EDU
     with pytest.raises(ValueError, match="unknown robot model"):
         robot_model("ver2_ultra")

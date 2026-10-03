@@ -31,8 +31,11 @@ entries; nothing renamed or removed. The 12-joint policy contract is byte-identi
 | right_arm | 20–23 | `r_shoulder_pitch/roll/yaw_joint`, `r_elbow_joint` | rs02 | can3 | - | ✓ | ✓ |
 | - | 19 | unused | | | | | |
 
-**PLACEHOLDER values — not measured, do not trust on hardware:** head limits ±30° (±0.523599 rad, open item H29),
-arm limits ±45° (±0.785398 rad), head gains kp 20 / kd 1, arm gains kp 40 / kd 2.
+Head limit ±73° (±1.27409 rad) and shoulder pitch (IDs 15 and 20) ±100° (±1.745329 rad), set by the user on the bench
+(2026-10-01; ID 20 asked, ID 15 mirrored); they were ±30° / ±45° placeholders.
+
+**PLACEHOLDER values — not measured, do not trust on hardware:** other arm limits ±45° (±0.785398 rad), head gains
+kp 20 / kd 1, arm gains kp 40 / kd 2 (open item H29).
 
 - `joints.py`: `AUXILIARY_JOINTS` adds IDs 14–18 and 20–23 (table above); `GROUP_ID_RANGES` head 13–14, left_arm
   15–18, right_arm 20–23 (was 13 / 14–17 / 18–21). New `VARIANT_MOTOR_IDS` and `motors_for_variant(name)`.

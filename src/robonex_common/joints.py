@@ -34,13 +34,13 @@ ACTUATED_JOINTS = (
 )
 
 AUXILIARY_JOINTS = (
-    JointSpec(13, "neck_pitch_joint", "neck_pitch", "rs05", "head", -0.523599, 0.523599),
+    JointSpec(13, "neck_pitch_joint", "neck_pitch", "rs05", "head", -1.27409, 1.27409),
     # JointSpec(14, "neck_yaw_joint", "neck_yaw", "rs05", "head", -0.523599, 0.523599),
-    JointSpec(15, "l_shoulder_pitch_joint", "left_shoulder_pitch", "rs02", "left_arm", -0.785398, 0.785398),
+    JointSpec(15, "l_shoulder_pitch_joint", "left_shoulder_pitch", "rs02", "left_arm", -1.745329, 1.745329),
     JointSpec(16, "l_shoulder_roll_joint", "left_shoulder_roll", "rs02", "left_arm", -0.785398, 0.785398),
     JointSpec(17, "l_shoulder_yaw_joint", "left_shoulder_yaw", "rs02", "left_arm", -0.785398, 0.785398),
     JointSpec(18, "l_elbow_joint", "left_elbow", "rs02", "left_arm", -0.785398, 0.785398),
-    JointSpec(20, "r_shoulder_pitch_joint", "right_shoulder_pitch", "rs02", "right_arm", -0.785398, 0.785398),
+    JointSpec(20, "r_shoulder_pitch_joint", "right_shoulder_pitch", "rs02", "right_arm", -1.745329, 1.745329),
     JointSpec(21, "r_shoulder_roll_joint", "right_shoulder_roll", "rs02", "right_arm", -0.785398, 0.785398),
     JointSpec(22, "r_shoulder_yaw_joint", "right_shoulder_yaw", "rs02", "right_arm", -0.785398, 0.785398),
     JointSpec(23, "r_elbow_joint", "right_elbow", "rs02", "right_arm", -0.785398, 0.785398),

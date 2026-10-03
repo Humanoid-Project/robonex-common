@@ -52,7 +52,7 @@ robonex-common/
 | left_arm | 15–18 | RS02 | can2 | - | ✓ | ✓ |
 | right_arm | 20–23 | RS02 | can3 | - | ✓ | ✓ |
 
-Head/arm limits (±30° / ±45°) and gains (kp 20 kd 1 / kp 40 kd 2) are PLACEHOLDERS until measured.
+Head limit ±73° and shoulder pitch (15, 20) ±100° (user, 2026-10-01). Other arm limits (±45°) and head/arm gains (kp 20 kd 1 / kp 40 kd 2) are PLACEHOLDERS until measured.
 
 <br>
 
