@@ -95,3 +95,9 @@ bash <(curl -fsSL https://raw.githubusercontent.com/Humanoid-Project/robonex-com
 cd ~/humanoid_project/robonex-common
 PYTHONPATH=src python -m pytest -q
 ```
+
+<br>
+
+## License
+
+Licensed under the [Apache License 2.0](LICENSE). Copyright 2026 RoboNex. See [NOTICE](NOTICE).
