@@ -1,7 +1,7 @@
 import math
 
 from .joints import JOINT_LIMITS_BY_NAME, MOTOR_LIMITS_BY_ID
-from .models import robot_model
+from .models import action_pose, robot_model
 
 
 DEFAULT_LIMIT_MARGIN_RAD = 0.05
@@ -49,8 +49,9 @@ def exceeds_joint_limit(position, motor_id, margin=DEFAULT_LIMIT_MARGIN_RAD, mod
     return position <= lower or position >= upper
 
 
-def action_normalization(margin=DEFAULT_ACTION_MARGIN_RAD, model="ver2_edu"):
+def action_normalization(margin=DEFAULT_ACTION_MARGIN_RAD, model="ver2_edu", pose="home"):
     profile = robot_model(model)
+    defaults = action_pose(model, pose)
     offsets = {}
     scales = {}
     clips = {}
@@ -59,7 +60,7 @@ def action_normalization(margin=DEFAULT_ACTION_MARGIN_RAD, model="ver2_edu"):
         clip_upper = upper - margin
         if margin < 0.0 or clip_lower >= clip_upper:
             raise ValueError(f"invalid action margin for {name}: {margin}")
-        default = profile.default_joint_pos[name]
+        default = defaults[name]
         if not clip_lower <= default <= clip_upper:
             raise ValueError(f"default pose for {name} is outside its clipped range: {default}")
         scale = _action_scale(name, margin=DEFAULT_ACTION_MARGIN_RAD, model=model)

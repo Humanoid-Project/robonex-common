@@ -39,6 +39,7 @@ class PolicyContract:
     foot_roll_limit: float = 0.0
     foot_roll_coeffs: tuple[float, ...] = ()
     foot_roll_pairs: tuple[tuple[str, str, float], ...] = ()
+    action_pose: str = "home"
 
     @classmethod
     def from_dict(cls, data):
@@ -55,6 +56,7 @@ class PolicyContract:
                     foot_roll_pairs=tuple(
                         (str(pair[0]), str(pair[1]), float(pair[2])) for pair in data["foot_roll_pairs"]
                     ),
+                    action_pose=str(data.get("action_pose", "home")),
                 )
             except KeyError as error:
                 raise ValueError(f"policy manifest is missing field: {error.args[0]}") from error
@@ -139,7 +141,7 @@ class PolicyContract:
             raise ValueError("observation_size must be positive")
         if not self.task or not self.description_model or not self.observation_terms:
             raise ValueError("task, description_model, and observation_terms are required")
-        offsets, scales, clips = action_normalization(model=self.robot_model)
+        offsets, scales, clips = action_normalization(model=self.robot_model, pose=self.action_pose)
         for index, name in enumerate(self.joint_order):
             expected = (offsets[name], scales[name], clips[name][0], clips[name][1])
             actual = (
@@ -186,6 +188,8 @@ class PolicyContract:
                 foot_roll_coeffs=list(self.foot_roll_coeffs),
                 foot_roll_pairs=[list(pair) for pair in self.foot_roll_pairs],
             )
+            if self.action_pose != "home":
+                data["action_pose"] = self.action_pose
         return data
 
     def save(self, path):

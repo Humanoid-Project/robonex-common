@@ -80,6 +80,20 @@ DEFAULT_JOINT_POS = {
     "r_ankle_upper_joint": -0.21255773798848565,
     "r_ankle_lower_joint": 0.2038048914121279,
 }
+DEFAULT_JOINT_POS_LEAN25 = {
+    "l_hip_yaw_joint": 0.0,
+    "l_hip_pitch_joint": 0.05636676870014177,
+    "l_hip_roll_joint": 0.0,
+    "l_knee_pitch_joint": -0.32986569515650194,
+    "l_ankle_upper_joint": 0.26360239061518426,
+    "l_ankle_lower_joint": -0.251384634679901,
+    "r_hip_yaw_joint": 0.0,
+    "r_hip_pitch_joint": -0.05636676870014177,
+    "r_hip_roll_joint": 0.0,
+    "r_knee_pitch_joint": 0.32986569515650194,
+    "r_ankle_upper_joint": -0.26360239061518426,
+    "r_ankle_lower_joint": 0.251384634679901,
+}
 
 
 def motor_ids_by_channel(motors=ACTUATED_JOINTS, mapping=None):

@@ -4,6 +4,7 @@ from dataclasses import dataclass, replace
 from .joints import (
     ACTUATED_JOINTS,
     DEFAULT_JOINT_POS,
+    DEFAULT_JOINT_POS_LEAN25,
     JOINT_BY_MODEL_NAME,
     JOINT_LIMITS_BY_NAME,
     MOTOR_BY_ID,
@@ -62,6 +63,18 @@ def leg_profile(name):
     return ROBOT_MODELS[robot_model(name).leg_profile]
 
 
+ACTION_POSES = {"lean25": dict(DEFAULT_JOINT_POS_LEAN25)}
+
+
+def action_pose(model, pose="home"):
+    profile = robot_model(model)
+    if pose == "home":
+        return dict(profile.default_joint_pos)
+    if pose not in ACTION_POSES:
+        raise ValueError(f"unknown action pose {pose!r}; known: home, {', '.join(sorted(ACTION_POSES))}")
+    return dict(ACTION_POSES[pose])
+
+
 def _check(model):
     names = {joint.model_name for joint in ACTUATED_JOINTS}
     if set(model.joint_limits) != names or set(model.default_joint_pos) != names:
@@ -90,3 +103,6 @@ if set(VARIANTS) != set(VARIANT_MOTOR_IDS):
 for _model in VARIANTS.values():
     _check(_model)
     _check_variant(_model)
+for _name, _pose in ACTION_POSES.items():
+    for _model in VARIANTS.values():
+        _check(replace(_model, name=f"{_model.name}:{_name}", default_joint_pos=_pose))
