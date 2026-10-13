@@ -15,6 +15,24 @@ Bump `pyproject.toml` `version` and `__init__.__version__` in the same commit as
 
 <br>
 
+## 1.3.0 — 2026-10-13
+
+**Named action poses.** Minor bump: new constants and functions, one optional manifest field; nothing renamed or removed. The
+home contract is byte-identical to 1.2.0 (`DEFAULT_JOINT_POS`, `action_normalization()` without `pose`, scales, clips, foot-roll
+clip), and a manifest without `action_pose` validates exactly as before.
+
+- `joints.py`: `DEFAULT_JOINT_POS_LEAN25` — ankle passive pitch +2.5°, hip pitch −2.5° (trunk upright), knee unchanged;
+  closed-loop solved on the ver2-3 model (cranks upper +2.925°, lower −2.726°; COM 60 mm ahead of the ankle axes vs 40 mm).
+- `models.py`: `ACTION_POSES` (`lean25`), `action_pose(model, pose="home")`.
+- `limits.py`: `action_normalization(..., pose="home")` moves only the offsets; scales and clips stay those of home.
+- `policy.py`: `PolicyContract.action_pose` (default `home`; written to the manifest only when not `home`); validation checks
+  the offsets against the named pose, so a lean policy is refused by 1.2.0 and a pose/offset mismatch is refused here.
+
+The common source hash changes, so manifests exported against 1.2.0 must be re-exported before deploy with 1.3.0
+(`verify_common_source`).
+
+<br>
+
 ## 1.2.0 — 2026-09-30
 
 **Head 13 (14 reserved for neck yaw, commented out until the motor exists), arms 15–18 / 20–23, per-variant motor sets.** Minor bump: new constants, functions and physical table
