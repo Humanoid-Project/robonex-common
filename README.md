@@ -52,6 +52,8 @@ robonex-common/
 | left_arm | 15–18 | RS02 | can2 | - | ✓ | ✓ |
 | right_arm | 20–23 | RS02 | can3 | - | ✓ | ✓ |
 
+Pro and max are retired (2026-11-02): `robonex-description` keeps only the `ver2` edu model and walking only `RoboNex-Walking-V2-Edu-v0`; the pro / max columns and `VARIANTS` entries stay as the bench-tool motor-ID plan.
+
 Head limit ±73° and shoulder pitch (15, 20) ±100° (user, 2026-10-01). Other arm limits (±45°) and head/arm gains (kp 20 kd 1 / kp 40 kd 2) are PLACEHOLDERS until measured.
 
 <br>
