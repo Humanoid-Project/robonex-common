@@ -102,4 +102,4 @@ PYTHONPATH=src python -m pytest -q
 
 ## License
 
-Licensed under the [Apache License 2.0](LICENSE). Copyright 2026 RoboNex. See [NOTICE](NOTICE).
+Licensed under the [PolyForm Noncommercial License 1.0.0](LICENSE). Copyright 2026 RoboNex. Commercial use requires a separate licence. See [NOTICE](NOTICE).
