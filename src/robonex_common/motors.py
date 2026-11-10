@@ -18,6 +18,8 @@ MOTOR_SPECS = {
     "rs02": MotorSpec("RS02", -12.57, 12.57, -44.0, 44.0, -17.0, 17.0, 500.0, 5.0),
     "rs03": MotorSpec("RS03", -12.57, 12.57, -20.0, 20.0, -60.0, 60.0, 5000.0, 100.0),
     "rs05": MotorSpec("RS05", -12.57, 12.57, -50.0, 50.0, -5.5, 5.5, 500.0, 5.0),
+    "rs00": MotorSpec("RS00", -12.57, 12.57, -33.0, 33.0, -14.0, 14.0, 500.0, 5.0),
+    "rs10p": MotorSpec("RS10P", -12.57, 12.57, -13.0, 13.0, -42.0, 42.0, 500.0, 5.0),
 }
 MOTOR_CONTROL_KP = 40.0
 MOTOR_CONTROL_KD = 2.0
@@ -29,11 +31,12 @@ JOINT_CONTROL_GAINS = {
     "ankle_upper": (40.0, 2.0),
     "ankle_lower": (40.0, 2.0),
     "neck_pitch": (20.0, 1.0),
-    # "neck_yaw": (20.0, 1.0),
+    "neck_yaw": (20.0, 1.0),
     "shoulder_pitch": (40.0, 2.0),
     "shoulder_roll": (40.0, 2.0),
     "shoulder_yaw": (40.0, 2.0),
     "elbow": (40.0, 2.0),
+    "wrist_yaw": (10.0, 0.5),
 }
 MOTOR_PHYSICS = {
     "rs02": {
@@ -49,9 +52,9 @@ MOTOR_PHYSICS = {
         "viscous_friction": 0.0,
     },
 }
-RATED_TORQUE = {"rs02": 6.0, "rs03": 13.0, "rs05": 1.6}
-PEAK_TORQUE = {"rs02": 17.0, "rs03": 60.0, "rs05": 5.5}
-NO_LOAD_SPEED = {"rs02": 42.9, "rs03": 20.9, "rs05": 50.3}
+RATED_TORQUE = {"rs02": 6.0, "rs03": 13.0, "rs05": 1.6, "rs00": 3.6, "rs10p": 9.5}
+PEAK_TORQUE = {"rs02": 17.0, "rs03": 60.0, "rs05": 5.5, "rs00": 14.0, "rs10p": 42.0}
+NO_LOAD_SPEED = {"rs02": 42.9, "rs03": 20.9, "rs05": 50.3, "rs00": 33.0, "rs10p": 13.1}
 VELOCITY_LIMIT_DERATE = 0.9
 VELOCITY_LIMIT = {
     model: round(speed * VELOCITY_LIMIT_DERATE, 2) for model, speed in NO_LOAD_SPEED.items()

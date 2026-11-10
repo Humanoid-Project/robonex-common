@@ -11,7 +11,7 @@ MAX_ACTION_SCALE_RAD = 0.25
 ACTION_REACH_SIGMA = 3.0
 
 
-def _action_scale(name, margin=DEFAULT_ACTION_MARGIN_RAD, model="ver2_edu"):
+def _action_scale(name, margin=DEFAULT_ACTION_MARGIN_RAD, model="ver2"):
     """Scale so the fence sits at least ``ACTION_REACH_SIGMA`` sigma away.
 
     The bent default pose leaves the ankles only ~0.36 rad of upward travel, so
@@ -31,7 +31,7 @@ def _action_scale(name, margin=DEFAULT_ACTION_MARGIN_RAD, model="ver2_edu"):
 
 
 ACTION_SCALE_RAD = {name: _action_scale(name) for name in JOINT_LIMITS_BY_NAME}
-def joint_limit_for(motor_id, margin=DEFAULT_LIMIT_MARGIN_RAD, model="ver2_edu"):
+def joint_limit_for(motor_id, margin=DEFAULT_LIMIT_MARGIN_RAD, model="ver2"):
     limits = robot_model(model).joint_limits_by_id()
     if motor_id in limits:
         lower, upper = limits[motor_id]
@@ -44,12 +44,12 @@ def joint_limit_for(motor_id, margin=DEFAULT_LIMIT_MARGIN_RAD, model="ver2_edu")
     return lower + margin, upper - margin
 
 
-def exceeds_joint_limit(position, motor_id, margin=DEFAULT_LIMIT_MARGIN_RAD, model="ver2_edu"):
+def exceeds_joint_limit(position, motor_id, margin=DEFAULT_LIMIT_MARGIN_RAD, model="ver2"):
     lower, upper = joint_limit_for(motor_id, margin, model)
     return position <= lower or position >= upper
 
 
-def action_normalization(margin=DEFAULT_ACTION_MARGIN_RAD, model="ver2_edu", pose="home"):
+def action_normalization(margin=DEFAULT_ACTION_MARGIN_RAD, model="ver2", pose="home"):
     profile = robot_model(model)
     defaults = action_pose(model, pose)
     offsets = {}
@@ -75,7 +75,7 @@ def action_normalization(margin=DEFAULT_ACTION_MARGIN_RAD, model="ver2_edu", pos
     return offsets, scales, clips
 
 
-def action_limit_reach(margin=DEFAULT_ACTION_MARGIN_RAD, model="ver2_edu"):
+def action_limit_reach(margin=DEFAULT_ACTION_MARGIN_RAD, model="ver2"):
     offsets, scales, clips = action_normalization(margin, model)
     return {
         name: ((clips[name][0] - offsets[name]) / scales[name],

@@ -1,4 +1,4 @@
-__version__ = "1.3.0"
+__version__ = "2.0.0"
 
 from .actuators import ACTUATOR_PARAMETERS, CONTROL_GAINS_BY_JOINT
 from .buses import BUS_MAP_FILE, DEFAULT_BUS_MAP, GROUPS, bus_map, channel_for_group
@@ -27,6 +27,8 @@ from .joints import (
     PASSIVE_CLOSED_LOOP_JOINTS,
     POLICY_JOINT_ORDER,
     VARIANT_MOTOR_IDS,
+    LEGACY_VARIANT_NAMES,
+    canonical_variant,
     JointSpec,
     channel_for_motor_id,
     motor_ids_by_channel,
@@ -47,9 +49,8 @@ from .models import (
     LEG_PROFILES,
     ROBOT_MODELS,
     VARIANTS,
+    VER2,
     VER2_EDU,
-    VER2_MAX,
-    VER2_PRO,
     FootRollClip,
     RobotModel,
     action_pose,
@@ -112,6 +113,8 @@ __all__ = [
     "motor_ids_by_channel",
     "motors_for_variant",
     "VARIANT_MOTOR_IDS",
+    "LEGACY_VARIANT_NAMES",
+    "canonical_variant",
     "ACTUATOR_PARAMETERS",
     "CONTROL_GAINS_BY_JOINT",
     "BALANCING_REPO_NAMES",
@@ -177,9 +180,8 @@ __all__ = [
     "LEG_PROFILES",
     "ROBOT_MODELS",
     "VARIANTS",
+    "VER2",
     "VER2_EDU",
-    "VER2_MAX",
-    "VER2_PRO",
     "FootRollClip",
     "action_pose",
     "RobotModel",

@@ -320,21 +320,21 @@ def test_auxiliary_motors_extend_the_policy_joints_without_changing_them():
     )
     from robonex_common.limits import joint_limit_for
 
-    assert tuple(joint.motor_id for joint in AUXILIARY_JOINTS) == (13, 15, 16, 17, 18, 20, 21, 22, 23)
-    head = MOTOR_BY_ID[13]
+    assert tuple(joint.motor_id for joint in AUXILIARY_JOINTS) == (16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27)
+    head = MOTOR_BY_ID[26]
     assert head.model_name == "neck_pitch_joint"
     assert head.motor_model == "rs05"
     assert head.group == "head"
-    assert 13 not in JOINT_BY_ID
-    assert len(ALL_MOTORS) == 21
-    assert len({joint.motor_id for joint in ALL_MOTORS}) == 21
+    assert 26 not in JOINT_BY_ID
+    assert len(ALL_MOTORS) == 24
+    assert len({joint.motor_id for joint in ALL_MOTORS}) == 24
     for joint in ALL_MOTORS:
         assert joint.motor_id in GROUP_ID_RANGES[joint.group], joint.model_name
     ranges = list(GROUP_ID_RANGES.values())
     for i, first in enumerate(ranges):
         for second in ranges[i + 1:]:
             assert not set(first) & set(second)
-    assert joint_limit_for(13, margin=0.0) == pytest.approx(MOTOR_LIMITS_BY_ID[13])
+    assert joint_limit_for(26, margin=0.0) == pytest.approx(MOTOR_LIMITS_BY_ID[26])
     assert MOTOR_SPECS["rs05"].t_max == pytest.approx(PEAK_TORQUE["rs05"]) == pytest.approx(5.5)
     assert MOTOR_SPECS["rs05"].v_max == pytest.approx(50.0)
     assert (MOTOR_SPECS["rs05"].kp_max, MOTOR_SPECS["rs05"].kd_max) == (500.0, 5.0)
@@ -350,9 +350,9 @@ def test_bus_map_defaults_and_config_file(tmp_path, monkeypatch):
     assert motor_ids_by_channel(ALL_MOTORS) == {
         "can0": tuple(range(1, 7)),
         "can1": tuple(range(7, 13)),
-        "can2": tuple(range(15, 19)),
-        "can3": tuple(range(20, 24)),
-        "can4": (13,),
+        "can2": tuple(range(16, 21)),
+        "can3": tuple(range(21, 26)),
+        "can4": (26, 27),
     }
 
     path = tmp_path / "bus_map.json"
@@ -361,7 +361,7 @@ def test_bus_map_defaults_and_config_file(tmp_path, monkeypatch):
     buses.bus_map.cache_clear()
     assert buses.channel_for_group("head") == "can0"
     assert buses.channel_for_group("left_leg") == "can0"
-    assert motor_ids_by_channel(ALL_MOTORS)["can0"] == tuple(range(1, 7)) + (13,)
+    assert motor_ids_by_channel(ALL_MOTORS)["can0"] == tuple(range(1, 7)) + (26, 27)
 
     path.write_text('{"tail": "can9"}', encoding="utf-8")
     buses.bus_map.cache_clear()

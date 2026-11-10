@@ -15,6 +15,32 @@ Bump `pyproject.toml` `version` and `__init__.__version__` in the same commit as
 
 <br>
 
+## 2.0.0 — 2026-11-10
+
+**One robot model, new motor IDs, arm and neck motors.** Major bump: the variants `ver2_pro` / `ver2_max`, the constants
+`VER2_PRO` / `VER2_MAX` and the IDs of every head and arm motor changed. The 12-leg policy contract is unchanged (IDs 1–12,
+`POLICY_JOINT_ORDER`, limits, default poses, foot-roll clip, action normalisation).
+
+| Group | IDs | Joints | Motor |
+| --- | --- | --- | --- |
+| waist | 13–15 | reserved, no motor | - |
+| left_arm | 16–20 | `l_shoulder_pitch/roll/yaw_joint`, `l_elbow_joint`, `l_wrist_yaw_joint` | rs02, rs10p, rs00, rs00, rs05 |
+| right_arm | 21–25 | `r_…` mirror | rs02, rs10p, rs00, rs00, rs05 |
+| head | 26–28 | `neck_pitch_joint`, `neck_yaw_joint`, 28 reserved | rs05, rs05 |
+
+- `joints.py`: `AUXILIARY_JOINTS` as above (was head 13, arms 15–18 / 20–23, all rs02); `GROUP_ID_RANGES` adds `waist`;
+  `VARIANT_MOTOR_IDS = {"ver2": 1–12, 16–27}`; new `LEGACY_VARIANT_NAMES` (`ver2_edu` → `ver2`) and `canonical_variant()`;
+  `motors_for_variant()` accepts the legacy name.
+- `models.py`: `VARIANTS = {"ver2": VER2}`; `ROBOT_MODELS` / `LEG_PROFILES` keep the leg profile `ver2_edu` (`VER2_EDU`),
+  which policies and manifests name; `VER2` shares it. `VER2_PRO` / `VER2_MAX` removed.
+- `motors.py`: `MOTOR_SPECS` `rs00` (±33 rad/s, ±14 N·m) and `rs10p` (±13 rad/s, ±42 N·m), kp 500 / kd 5, from the CAN 2.0
+  manuals; `RATED_TORQUE` (standstill continuous) rs00 3.6, rs10p 9.5; `PEAK_TORQUE` 14 / 42; `NO_LOAD_SPEED` 33.0 / 13.1;
+  `JOINT_CONTROL_GAINS` `neck_yaw` (20, 1) and `wrist_yaw` (10, 0.5) placeholders.
+- `limits.py`: default `model="ver2"`.
+- Limits of the arm joints other than shoulder pitch, the wrist and neck yaw are placeholders (±45° / ±30°).
+
+<br>
+
 ## 1.3.0 — 2026-10-13
 
 **Named action poses.** Minor bump: new constants and functions, one optional manifest field; nothing renamed or removed. The

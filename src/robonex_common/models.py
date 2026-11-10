@@ -9,6 +9,7 @@ from .joints import (
     JOINT_LIMITS_BY_NAME,
     MOTOR_BY_ID,
     VARIANT_MOTOR_IDS,
+    canonical_variant,
 )
 
 
@@ -41,21 +42,20 @@ VER2_EDU = RobotModel(
         coeffs=(-0.001195, 0.498159, 0.491024, -0.105182, -0.031960, 0.006356),
         pairs=(("l_ankle_upper_joint", "l_ankle_lower_joint", 1.0), ("r_ankle_upper_joint", "r_ankle_lower_joint", -1.0)),
     ),
-    VARIANT_MOTOR_IDS["ver2_edu"],
+    VARIANT_MOTOR_IDS["ver2"],
     "ver2_edu",
 )
-VER2_PRO = replace(VER2_EDU, name="ver2_pro", motor_ids=VARIANT_MOTOR_IDS["ver2_pro"])
-VER2_MAX = replace(VER2_EDU, name="ver2_max", motor_ids=VARIANT_MOTOR_IDS["ver2_max"])
+VER2 = replace(VER2_EDU, name="ver2")
 
 ROBOT_MODELS = {model.name: model for model in (VER2_EDU,)}
 LEG_PROFILES = ROBOT_MODELS
-VARIANTS = {model.name: model for model in (VER2_EDU, VER2_PRO, VER2_MAX)}
+VARIANTS = {model.name: model for model in (VER2,)}
 
 
 def robot_model(name):
     model = VARIANTS.get(name) or ROBOT_MODELS.get(name)
     if model is None:
-        raise ValueError(f"unknown robot model {name!r}; known: {', '.join(sorted(VARIANTS))}")
+        raise ValueError(f"unknown robot model {name!r}; known: {', '.join(sorted({*VARIANTS, *ROBOT_MODELS}))}")
     return model
 
 
@@ -85,7 +85,8 @@ def _check(model):
 
 
 def _check_variant(model):
-    if model.motor_ids != VARIANT_MOTOR_IDS.get(model.name) or not set(model.motor_ids) <= set(MOTOR_BY_ID):
+    expected = VARIANT_MOTOR_IDS.get(canonical_variant(model.name))
+    if model.motor_ids != expected or not set(model.motor_ids) <= set(MOTOR_BY_ID):
         raise ValueError(f"robot variant {model.name}: motor_ids do not match VARIANT_MOTOR_IDS")
     if not {joint.motor_id for joint in ACTUATED_JOINTS} <= set(model.motor_ids):
         raise ValueError(f"robot variant {model.name} is missing a leg motor")

@@ -34,30 +34,32 @@ ACTUATED_JOINTS = (
 )
 
 AUXILIARY_JOINTS = (
-    JointSpec(13, "neck_pitch_joint", "neck_pitch", "rs05", "head", -1.27409, 1.27409),
-    # JointSpec(14, "neck_yaw_joint", "neck_yaw", "rs05", "head", -0.523599, 0.523599),
-    JointSpec(15, "l_shoulder_pitch_joint", "left_shoulder_pitch", "rs02", "left_arm", -1.745329, 1.745329),
-    JointSpec(16, "l_shoulder_roll_joint", "left_shoulder_roll", "rs02", "left_arm", -0.785398, 0.785398),
-    JointSpec(17, "l_shoulder_yaw_joint", "left_shoulder_yaw", "rs02", "left_arm", -0.785398, 0.785398),
-    JointSpec(18, "l_elbow_joint", "left_elbow", "rs02", "left_arm", -0.785398, 0.785398),
-    JointSpec(20, "r_shoulder_pitch_joint", "right_shoulder_pitch", "rs02", "right_arm", -1.745329, 1.745329),
-    JointSpec(21, "r_shoulder_roll_joint", "right_shoulder_roll", "rs02", "right_arm", -0.785398, 0.785398),
-    JointSpec(22, "r_shoulder_yaw_joint", "right_shoulder_yaw", "rs02", "right_arm", -0.785398, 0.785398),
-    JointSpec(23, "r_elbow_joint", "right_elbow", "rs02", "right_arm", -0.785398, 0.785398),
+    JointSpec(16, "l_shoulder_pitch_joint", "left_shoulder_pitch", "rs02", "left_arm", -1.745329, 1.745329),
+    JointSpec(17, "l_shoulder_roll_joint", "left_shoulder_roll", "rs10p", "left_arm", -0.785398, 0.785398),
+    JointSpec(18, "l_shoulder_yaw_joint", "left_shoulder_yaw", "rs00", "left_arm", -0.785398, 0.785398),
+    JointSpec(19, "l_elbow_joint", "left_elbow", "rs00", "left_arm", -0.785398, 0.785398),
+    JointSpec(20, "l_wrist_yaw_joint", "left_wrist_yaw", "rs05", "left_arm", -0.785398, 0.785398),
+    JointSpec(21, "r_shoulder_pitch_joint", "right_shoulder_pitch", "rs02", "right_arm", -1.745329, 1.745329),
+    JointSpec(22, "r_shoulder_roll_joint", "right_shoulder_roll", "rs10p", "right_arm", -0.785398, 0.785398),
+    JointSpec(23, "r_shoulder_yaw_joint", "right_shoulder_yaw", "rs00", "right_arm", -0.785398, 0.785398),
+    JointSpec(24, "r_elbow_joint", "right_elbow", "rs00", "right_arm", -0.785398, 0.785398),
+    JointSpec(25, "r_wrist_yaw_joint", "right_wrist_yaw", "rs05", "right_arm", -0.785398, 0.785398),
+    JointSpec(26, "neck_pitch_joint", "neck_pitch", "rs05", "head", -1.27409, 1.27409),
+    JointSpec(27, "neck_yaw_joint", "neck_yaw", "rs05", "head", -0.523599, 0.523599),
 )
 ALL_MOTORS = ACTUATED_JOINTS + AUXILIARY_JOINTS
 GROUP_ID_RANGES = {
     "left_leg": range(1, 7),
     "right_leg": range(7, 13),
-    "head": range(13, 15),
-    "left_arm": range(15, 19),
-    "right_arm": range(20, 24),
+    "waist": range(13, 16),
+    "left_arm": range(16, 21),
+    "right_arm": range(21, 26),
+    "head": range(26, 29),
 }
 VARIANT_MOTOR_IDS = {
-    "ver2_edu": tuple(range(1, 14)),
-    "ver2_pro": tuple(range(1, 14)) + tuple(range(15, 19)) + tuple(range(20, 24)),
-    "ver2_max": tuple(range(1, 14)) + tuple(range(15, 19)) + tuple(range(20, 24)),
+    "ver2": tuple(range(1, 13)) + tuple(range(16, 28)),
 }
+LEGACY_VARIANT_NAMES = {"ver2_edu": "ver2"}
 
 JOINT_BY_ID = {joint.motor_id: joint for joint in ACTUATED_JOINTS}
 MOTOR_BY_ID = {joint.motor_id: joint for joint in ALL_MOTORS}
@@ -132,8 +134,12 @@ PASSIVE_CLOSED_LOOP_JOINTS = (
 )
 
 
+def canonical_variant(name):
+    return LEGACY_VARIANT_NAMES.get(name, name)
+
+
 def motors_for_variant(name):
-    ids = VARIANT_MOTOR_IDS.get(name)
+    ids = VARIANT_MOTOR_IDS.get(canonical_variant(name))
     if ids is None:
         raise ValueError(f"unknown robot variant {name!r}; known: {', '.join(sorted(VARIANT_MOTOR_IDS))}")
     return tuple(MOTOR_BY_ID[motor_id] for motor_id in ids)
