@@ -106,6 +106,21 @@ def test_schema2_manifest_is_refused(tmp_path):
         _load(tmp_path, _payload("ver2_edu", schema=2))
 
 
+def test_a_manifest_with_the_2_0_0_default_pose_is_refused(tmp_path):
+    old_left = {"hip_pitch": 0.1, "knee_pitch": -0.3298656951565011, "ankle_upper": 0.21255773798848565,
+                "ankle_lower": -0.2038048914121279}
+    old_scales = {"knee_pitch": 0.1648, "ankle_upper": 0.160604, "ankle_lower": 0.219621}
+    payload = _payload("ver2_edu")
+    for i, name in enumerate(POLICY_JOINT_ORDER):
+        side, short = name[0], name[2:-6]
+        if short in old_left:
+            payload["action_offsets"][i] = old_left[short] if side == "l" else -old_left[short]
+        if short in old_scales:
+            payload["action_scales"][i] = old_scales[short]
+    with pytest.raises(ValueError, match="action contract mismatch"):
+        _load(tmp_path, payload)
+
+
 def test_a_policy_with_other_action_scales_is_refused(tmp_path):
     payload = _payload("ver2_edu")
     payload["action_scales"] = [0.5 * value for value in payload["action_scales"]]
