@@ -53,10 +53,10 @@ def test_action_scales_match_the_independent_physical_contract():
     expected = {
         "l_hip_yaw_joint": 0.25, "r_hip_yaw_joint": 0.25,
         "l_hip_pitch_joint": 0.25, "r_hip_pitch_joint": 0.25,
-        "l_knee_pitch_joint": 0.1648, "r_knee_pitch_joint": 0.1648,
+        "l_knee_pitch_joint": 0.186909, "r_knee_pitch_joint": 0.186909,
         "l_hip_roll_joint": 0.148886, "r_hip_roll_joint": 0.148886,
-        "l_ankle_upper_joint": 0.160604, "r_ankle_upper_joint": 0.160604,
-        "l_ankle_lower_joint": 0.219621, "r_ankle_lower_joint": 0.219621,
+        "l_ankle_upper_joint": 0.169625, "r_ankle_upper_joint": 0.169625,
+        "l_ankle_lower_joint": 0.211194, "r_ankle_lower_joint": 0.211194,
     }
     assert ACTION_SCALE_RAD == pytest.approx(expected, abs=1e-6)
 

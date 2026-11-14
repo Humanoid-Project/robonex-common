@@ -15,6 +15,28 @@ Bump `pyproject.toml` `version` and `__init__.__version__` in the same commit as
 
 <br>
 
+## 2.1.0 — 2026-11-14
+
+**New default standing pose (policy contract change).** Minor bump by the versioning table (changed physical value), but it
+breaks the policy contract: `DEFAULT_JOINT_POS` is the action offset and the `joint_pos_rel` reference, and the action
+scales follow from it. A manifest exported with an earlier version fails `PolicyContract.validate()` here; run such a
+policy with the robonex-common version it was exported with.
+
+| Value | 2.0.0 | 2.1.0 |
+| --- | --- | --- |
+| output pose (hip pitch / knee / ankle pitch) | 0.1 / 0.2967 / 0.1967 rad | **0.13 / 0.35 / 0.22 rad** (7.45° / 20.05° / 12.61°) |
+| `DEFAULT_JOINT_POS` hip pitch | ±0.1 | ±0.13 |
+| `DEFAULT_JOINT_POS` knee crank | ∓0.3298656951565011 | ∓0.3961936767101065 |
+| `DEFAULT_JOINT_POS` ankle upper / lower crank | ±0.21255773798848565 / ∓0.2038048914121279 | ±0.23962121825843782 / ∓0.22908552614940247 |
+| `ACTION_SCALE_RAD` knee / ankle upper / ankle lower | 0.1648 / 0.160604 / 0.219621 | 0.186909 / 0.169625 / 0.211194 |
+| `DEFAULT_JOINT_POS_LEAN25` (home with the ankles +2.5° and the hip pitch −2.5°) | on the old home | re-solved on the new home: hip ±0.08636676870014176, ankle ±0.29151699454209923 / ∓0.27714610722190014 |
+
+Cranks solved on the robonex-description Ver.2-4 model (`ver2/ver2_constants.json` `default_actuated_pos`); limits,
+foot-roll clip, joint order and every other value are unchanged. Reason: knee action range and ankle cranks better
+centred, more vertical leg authority, same centre-of-mass position over the foot (37.7 mm ahead of the ankle axes).
+
+<br>
+
 ## 2.0.0 — 2026-11-10
 
 **One robot model, new motor IDs, arm and neck motors.** Major bump: the variants `ver2_pro` / `ver2_max`, the constants

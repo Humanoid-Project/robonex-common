@@ -1,4 +1,4 @@
-__version__ = "2.0.0"
+__version__ = "2.1.0"
 
 from .actuators import ACTUATOR_PARAMETERS, CONTROL_GAINS_BY_JOINT
 from .buses import BUS_MAP_FILE, DEFAULT_BUS_MAP, GROUPS, bus_map, channel_for_group

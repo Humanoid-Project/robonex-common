@@ -12,11 +12,11 @@ from robonex_common.paths import DESCRIPTION_REPO_NAMES, resolve_repo
 from robonex_common.policy import PolicyContract
 from robonex_common.runtime import ActionPipeline
 
-W78_SCALES = {
+CONTRACT_SCALES = {
     "hip_yaw": 0.25, "hip_pitch": 0.25, "hip_roll": 0.148886,
-    "knee_pitch": 0.1648, "ankle_upper": 0.160604, "ankle_lower": 0.219621,
+    "knee_pitch": 0.186909, "ankle_upper": 0.169625, "ankle_lower": 0.211194,
 }
-W78_LEFT_CLIPS = {
+CONTRACT_LEFT_CLIPS = {
     "hip_yaw": (-0.827758, 0.827758), "hip_pitch": (-1.648063, 1.648063), "hip_roll": (-2.084395, 0.164533),
     "knee_pitch": (-1.21173, 0.164533), "ankle_upper": (-0.269253, 0.862665), "ankle_lower": (-0.862665, 0.513599),
 }
@@ -63,15 +63,15 @@ def _load(tmp_path, payload):
     return PolicyContract.load(path)
 
 
-def test_ver2_normalization_matches_the_w78_training_run():
+def test_ver2_normalization_matches_the_pinned_contract():
     offsets, scales, clips = action_normalization(0.01, model="ver2_edu")
-    for short, scale in W78_SCALES.items():
+    for short, scale in CONTRACT_SCALES.items():
         assert scales["l_" + short + "_joint"] == pytest.approx(scale, abs=1e-9)
         assert scales["r_" + short + "_joint"] == pytest.approx(scale, abs=1e-9)
-    for short, (lower, upper) in W78_LEFT_CLIPS.items():
+    for short, (lower, upper) in CONTRACT_LEFT_CLIPS.items():
         assert clips["l_" + short + "_joint"] == pytest.approx((lower, upper), abs=1e-9)
         assert clips["r_" + short + "_joint"] == pytest.approx((-upper, -lower), abs=1e-9)
-    assert offsets["l_knee_pitch_joint"] == pytest.approx(-0.3298656951565011)
+    assert offsets["l_knee_pitch_joint"] == pytest.approx(-0.3961936767101065)
 
 
 def test_ver2_edu_is_the_default():

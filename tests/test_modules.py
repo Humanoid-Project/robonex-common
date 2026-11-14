@@ -117,10 +117,10 @@ def test_standing_pose_is_inside_every_joint_limit():
 def test_standing_pose_is_the_mildly_bent_policy_reference():
     assert DEFAULT_JOINT_POS["l_hip_yaw_joint"] == 0.0
     assert DEFAULT_JOINT_POS["l_hip_roll_joint"] == 0.0
-    assert DEFAULT_JOINT_POS["l_hip_pitch_joint"] == pytest.approx(0.1)
-    assert DEFAULT_JOINT_POS["l_knee_pitch_joint"] == pytest.approx(-0.3298656951565011)
-    assert DEFAULT_JOINT_POS["l_ankle_upper_joint"] == pytest.approx(0.21255773798848565)
-    assert DEFAULT_JOINT_POS["l_ankle_lower_joint"] == pytest.approx(-0.2038048914121279)
+    assert DEFAULT_JOINT_POS["l_hip_pitch_joint"] == pytest.approx(0.13)
+    assert DEFAULT_JOINT_POS["l_knee_pitch_joint"] == pytest.approx(-0.3961936767101065)
+    assert DEFAULT_JOINT_POS["l_ankle_upper_joint"] == pytest.approx(0.23962121825843782)
+    assert DEFAULT_JOINT_POS["l_ankle_lower_joint"] == pytest.approx(-0.22908552614940247)
 
 
 def test_actuator_parameters_carry_the_measured_gains_and_physics():
