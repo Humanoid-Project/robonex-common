@@ -14,11 +14,11 @@ from robonex_common.runtime import ActionPipeline
 
 CONTRACT_SCALES = {
     "hip_yaw": 0.25, "hip_pitch": 0.25, "hip_roll": 0.148886,
-    "knee_pitch": 0.15782, "ankle_upper": 0.169625, "ankle_lower": 0.211194,
+    "knee_pitch": 0.075494, "ankle_upper": 0.169625, "ankle_lower": 0.211194,
 }
 CONTRACT_LEFT_CLIPS = {
     "hip_yaw": (-0.827758, 0.827758), "hip_pitch": (-1.648063, 1.648063), "hip_roll": (-2.084395, 0.164533),
-    "knee_pitch": (-1.002291, 0.077266), "ankle_upper": (-0.269253, 0.862665), "ankle_lower": (-0.862665, 0.513599),
+    "knee_pitch": (-0.792851, -0.01), "ankle_upper": (-0.269253, 0.862665), "ankle_lower": (-0.862665, 0.513599),
 }
 
 
@@ -71,7 +71,7 @@ def test_ver2_normalization_matches_the_pinned_contract():
     for short, (lower, upper) in CONTRACT_LEFT_CLIPS.items():
         assert clips["l_" + short + "_joint"] == pytest.approx((lower, upper), abs=1e-9)
         assert clips["r_" + short + "_joint"] == pytest.approx((-upper, -lower), abs=1e-9)
-    assert offsets["l_knee_pitch_joint"] == pytest.approx(-0.3961936767101065)
+    assert offsets["l_knee_pitch_joint"] == pytest.approx(-0.23648024059811287)
 
 
 def test_ver2_edu_is_the_default():
@@ -130,6 +130,21 @@ def test_a_manifest_with_the_2_1_0_knee_limits_is_refused(tmp_path):
         elif name == "r_knee_pitch_joint":
             payload["action_scales"][i] = 0.186909
             payload["target_clips"][i] = [-0.164533, 1.21173]
+    with pytest.raises(ValueError, match="action contract mismatch"):
+        _load(tmp_path, payload)
+
+
+def test_a_manifest_with_the_2_2_0_knee_contract_is_refused(tmp_path):
+    payload = _payload("ver2_edu")
+    for i, name in enumerate(POLICY_JOINT_ORDER):
+        if name == "l_knee_pitch_joint":
+            payload["action_offsets"][i] = -0.3961936767101065
+            payload["action_scales"][i] = 0.15782
+            payload["target_clips"][i] = [-1.002291, 0.077266]
+        elif name == "r_knee_pitch_joint":
+            payload["action_offsets"][i] = 0.3961936767101065
+            payload["action_scales"][i] = 0.15782
+            payload["target_clips"][i] = [-0.077266, 1.002291]
     with pytest.raises(ValueError, match="action contract mismatch"):
         _load(tmp_path, payload)
 

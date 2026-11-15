@@ -15,6 +15,31 @@ Bump `pyproject.toml` `version` and `__init__.__version__` in the same commit as
 
 <br>
 
+## 2.3.0 — 2026-11-15
+
+**Knee linkage of the corrected Ver.2-4 model: 100 mm knee crank (policy contract change).** The first Ver.2-4 package
+carried the Ver.2-3 70 mm crank by mistake (user, 2026-11-15); 2.1.0 and 2.2.0 knee values belong to that model and do
+not describe the robot. A manifest exported with an earlier version fails `PolicyContract.validate()` here.
+
+| Value (left; right mirrored) | 2.2.0 | 2.3.0 |
+| --- | --- | --- |
+| `l_knee_pitch_joint` limits | −1.012291 / +0.087266 rad (−58° / +5°) | **−0.802851 / 0 rad (−46° / 0°)** |
+| knee output range | −42.7° / +5.2° | −54.2° / 0° |
+| `DEFAULT_JOINT_POS` knee crank (knee output 0.35 rad, unchanged) | ∓0.3961936767101065 | **∓0.23648024059811287** (−13.55°) |
+| `DEFAULT_JOINT_POS_LEAN25` knee crank | ∓0.3961936767101065 | ∓0.23648024059811287 |
+| `ACTION_SCALE_RAD` knee | 0.15782 | **0.075494** |
+| knee target clip (margin 0.01) | −1.002291 / +0.077266 | −0.792851 / −0.01 |
+
+Knee four-bar: crank 100.00, coupler 134.00, rocker 92.43, ground 175.00 mm; knee/crank ratio 1.87 at zero and 1.26 at
+the default pose; dead centres at crank +6.15° and −80.1°. Exact-mesh contact from crank +1.75° (coupler on the crank
+arm) and −48.6° (coupler on the knee_link pin boss). The upper limit is the straight leg.
+
+**The zero pose now sits on the knee limit.** `joint_limit_for` / `exceeds_joint_limit` with the default 0.05 rad margin
+report a knee reading above −0.05 rad (−2.9°) as outside its limit, so bench scripts that check the start pose refuse a
+straight knee. Every other limit, the hip and ankle default cranks, the foot-roll clip and the joint order are unchanged.
+
+<br>
+
 ## 2.2.0 — 2026-11-15
 
 **Knee crank limits from an exact-mesh sweep (policy contract change).** Minor bump by the versioning table (changed

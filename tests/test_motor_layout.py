@@ -88,7 +88,7 @@ def test_every_motor_has_a_gain_a_limit_and_a_group_in_range():
         spec = MOTOR_SPECS[joint.motor_model]
         assert 0.0 < kp <= spec.kp_max and 0.0 < kd <= spec.kd_max, joint.model_name
         lower, upper = MOTOR_LIMITS_BY_ID[joint.motor_id]
-        assert lower < 0.0 < upper
+        assert lower <= 0.0 <= upper and lower < upper
         assert joint.motor_id in GROUP_ID_RANGES[joint.group]
         for model in VARIANTS:
             assert joint_limit_for(joint.motor_id, margin=0.0, model=model) == pytest.approx((lower, upper))
