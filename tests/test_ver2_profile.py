@@ -14,11 +14,11 @@ from robonex_common.runtime import ActionPipeline
 
 CONTRACT_SCALES = {
     "hip_yaw": 0.25, "hip_pitch": 0.25, "hip_roll": 0.148886,
-    "knee_pitch": 0.186909, "ankle_upper": 0.169625, "ankle_lower": 0.211194,
+    "knee_pitch": 0.15782, "ankle_upper": 0.169625, "ankle_lower": 0.211194,
 }
 CONTRACT_LEFT_CLIPS = {
     "hip_yaw": (-0.827758, 0.827758), "hip_pitch": (-1.648063, 1.648063), "hip_roll": (-2.084395, 0.164533),
-    "knee_pitch": (-1.21173, 0.164533), "ankle_upper": (-0.269253, 0.862665), "ankle_lower": (-0.862665, 0.513599),
+    "knee_pitch": (-1.002291, 0.077266), "ankle_upper": (-0.269253, 0.862665), "ankle_lower": (-0.862665, 0.513599),
 }
 
 
@@ -117,6 +117,19 @@ def test_a_manifest_with_the_2_0_0_default_pose_is_refused(tmp_path):
             payload["action_offsets"][i] = old_left[short] if side == "l" else -old_left[short]
         if short in old_scales:
             payload["action_scales"][i] = old_scales[short]
+    with pytest.raises(ValueError, match="action contract mismatch"):
+        _load(tmp_path, payload)
+
+
+def test_a_manifest_with_the_2_1_0_knee_limits_is_refused(tmp_path):
+    payload = _payload("ver2_edu")
+    for i, name in enumerate(POLICY_JOINT_ORDER):
+        if name == "l_knee_pitch_joint":
+            payload["action_scales"][i] = 0.186909
+            payload["target_clips"][i] = [-1.21173, 0.164533]
+        elif name == "r_knee_pitch_joint":
+            payload["action_scales"][i] = 0.186909
+            payload["target_clips"][i] = [-0.164533, 1.21173]
     with pytest.raises(ValueError, match="action contract mismatch"):
         _load(tmp_path, payload)
 

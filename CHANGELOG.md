@@ -15,6 +15,26 @@ Bump `pyproject.toml` `version` and `__init__.__version__` in the same commit as
 
 <br>
 
+## 2.2.0 — 2026-11-15
+
+**Knee crank limits from an exact-mesh sweep (policy contract change).** Minor bump by the versioning table (changed
+physical value), but it changes the knee action scale and target clip: a manifest exported with an earlier version fails
+`PolicyContract.validate()` here; run such a policy with the robonex-common version it was exported with.
+
+| Value (left; right mirrored) | 2.1.0 | 2.2.0 |
+| --- | --- | --- |
+| `l_knee_pitch_joint` limits | −1.22173 / +0.174533 rad (−70° / +10°) | **−1.012291 / +0.087266 rad (−58° / +5°)** |
+| knee output range | −47.10° / +10.96° | −42.7° / +5.2° |
+| `ACTION_SCALE_RAD` knee | 0.186909 | **0.15782** |
+| knee target clip (margin 0.01) | −1.21173 / +0.164533 | −1.002291 / +0.077266 |
+
+Reason (user, 2026-11-15: knee only, the other joints keep their limits): on the Ver.2-4 meshes the knee coupler touches
+the knee crank arm from crank +7.3° and the knee_link pin boss from crank −60.1°; 2° margin. Isaac converts with
+self-collision off, so the limit is the only guard. The default pose (crank ∓0.396194 rad, −22.7°) stays inside.
+Every other limit, the default pose, the foot-roll clip and the joint order are unchanged.
+
+<br>
+
 ## 2.1.0 — 2026-11-14
 
 **New default standing pose (policy contract change).** Minor bump by the versioning table (changed physical value), but it
