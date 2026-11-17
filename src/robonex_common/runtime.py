@@ -99,19 +99,28 @@ class ObservationHistory:
         if self._frames is None:
             self._frames = np.repeat(frame[None, :], self.history_length, axis=0)
         else:
-            self._frames = np.roll(self._frames, -1, axis=0)
-            self._frames[-1] = frame
+            frames = np.empty_like(self._frames)
+            frames[:-1] = self._frames[1:]
+            frames[-1] = frame
+            self._frames = frames
         return self
 
     def observation(self):
         if self._frames is None:
             raise RuntimeError("append() at least one frame before reading the observation")
-        pieces = []
-        offset = 0
-        for _, size in self.term_sizes:
-            pieces.append(self._frames[:, offset : offset + size].reshape(-1))
-            offset += size
-        observation = np.concatenate(pieces).astype(np.float32)
+        frames = self._frames
+        layout = (frames.shape, *[size for _, size in self.term_sizes])
+        cached = getattr(self, "_gather", None)
+        if cached is None or cached[0] != layout:
+            index = np.arange(frames.size).reshape(frames.shape)
+            pieces = []
+            offset = 0
+            for size in layout[1:]:
+                pieces.append(index[:, offset : offset + size].reshape(-1))
+                offset += size
+            cached = (layout, np.concatenate(pieces))
+            self._gather = cached
+        observation = frames.take(cached[1])
         if observation.shape != (self.expected_size,):
             raise ValueError(f"observation must have {self.expected_size} values, got {observation.shape[0]}")
         if not np.isfinite(observation).all():
@@ -174,16 +183,18 @@ class ActionPipeline:
         targets = np.array(targets, dtype=np.float64, copy=True).reshape(-1)
         changed = False
         for upper_index, lower_index, sign, upper_range, lower_range in self.roll_pairs:
+            target_upper = targets[upper_index]
+            target_lower = targets[lower_index]
             upper, lower = clip_foot_roll(
-                sign * targets[upper_index],
-                sign * targets[lower_index],
+                sign * target_upper,
+                sign * target_lower,
                 upper_range,
                 lower_range,
                 self.roll_coeffs,
                 self.roll_limit,
             )
             upper, lower = sign * float(upper), sign * float(lower)
-            changed |= upper != targets[upper_index] or lower != targets[lower_index]
+            changed |= upper != target_upper or lower != target_lower
             targets[upper_index], targets[lower_index] = upper, lower
         return targets, changed
 

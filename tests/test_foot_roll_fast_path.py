@@ -210,11 +210,14 @@ def test_non_finite_values_fall_back():
     assert _check(_args(0.0, 0.0, (-1.0, 1.0), (-1.0, 1.0), (0.0, 0.0, 0.0, 1.0, 0.0, 1.0), 0.1))
 
 
-@pytest.mark.parametrize("upper_range", [(0.0, 0.0), (1e200, 1e200)])
-def test_fast_path_aborting_mid_loop_restarts_in_numpy(upper_range):
-    # roll = upper^2. The first iteration is finite and clips upper onto the bound; the second one
-    # has a zero gradient (bound 0) or an overflowing roll (bound 1e200).
-    coeffs = (0.0, 0.0, 0.0, 1.0, 0.0, 0.0)
+@pytest.mark.parametrize(
+    "upper_range,coeffs",
+    [((1.0, 1.0), (0.0, -2.0, 0.0, 1.0, 0.0, 0.0)), ((1e200, 1e200), (0.0, 0.0, 0.0, 1.0, 0.0, 0.0))],
+)
+def test_fast_path_aborting_mid_loop_restarts_in_numpy(upper_range, coeffs):
+    # roll = upper^2 - 2 upper or upper^2. The first iteration is finite and clips upper onto the bound; the
+    # second one has a zero gradient (bound 1; a zero bound never enters the fast path) or an overflowing roll
+    # (bound 1e200).
     make = _args(4.0, 0.25, upper_range, (-1.0, 1.0), coeffs, 1.0)
     assert _clip_foot_roll_scalar(*make(), 1) is not None
     assert _clip_foot_roll_scalar(*make(), 2) is None

@@ -25,6 +25,10 @@ try:
 except ImportError:
     python_can = None
 
+_PACK_U16X4 = struct.Struct(">HHHH").pack
+_UNPACK_U16X4 = struct.Struct(">HHHH").unpack_from
+_BUFFER_TYPES = (bytes, bytearray)
+
 
 def drain(bus):
     dropped = 0
@@ -73,18 +77,23 @@ class Motor:
         raw_vel = float_to_uint(vel, spec.v_min, spec.v_max, 16)
         raw_kp = float_to_uint(kp, 0.0, spec.kp_max, 16)
         raw_kd = float_to_uint(kd, 0.0, spec.kd_max, 16)
-        data = bytes(
-            [
-                (raw_pos >> 8) & 0xFF,
-                raw_pos & 0xFF,
-                (raw_vel >> 8) & 0xFF,
-                raw_vel & 0xFF,
-                (raw_kp >> 8) & 0xFF,
-                raw_kp & 0xFF,
-                (raw_kd >> 8) & 0xFF,
-                raw_kd & 0xFF,
-            ]
-        )
+        try:
+            data = _PACK_U16X4(raw_pos, raw_vel, raw_kp, raw_kd)
+        except struct.error:
+            data = None
+        if data is None:
+            data = bytes(
+                [
+                    (raw_pos >> 8) & 0xFF,
+                    raw_pos & 0xFF,
+                    (raw_vel >> 8) & 0xFF,
+                    raw_vel & 0xFF,
+                    (raw_kp >> 8) & 0xFF,
+                    raw_kp & 0xFF,
+                    (raw_kd >> 8) & 0xFF,
+                    raw_kd & 0xFF,
+                ]
+            )
         self._send(COMM_OPERATION, data16, data)
 
     def write_parameter_u8(self, index, value):
@@ -149,13 +158,19 @@ class Motor:
         if len(data) < 8:
             return None
         spec = self.spec
-        raw_pos = (data[0] << 8) | data[1]
-        raw_vel = (data[2] << 8) | data[3]
-        raw_torque = (data[4] << 8) | data[5]
-        raw_temp = (data[6] << 8) | data[7]
-        self.last_position = uint_to_float(raw_pos, spec.p_min, spec.p_max, 16)
-        self.last_velocity = uint_to_float(raw_vel, spec.v_min, spec.v_max, 16)
-        self.last_torque = uint_to_float(raw_torque, spec.t_min, spec.t_max, 16)
+        if type(data) in _BUFFER_TYPES:
+            raw_pos, raw_vel, raw_torque, raw_temp = _UNPACK_U16X4(data)
+        else:
+            raw_pos = (data[0] << 8) | data[1]
+            raw_vel = (data[2] << 8) | data[3]
+            raw_torque = (data[4] << 8) | data[5]
+            raw_temp = (data[6] << 8) | data[7]
+        lower = spec.p_min
+        self.last_position = raw_pos / 65535.0 * (spec.p_max - lower) + lower
+        lower = spec.v_min
+        self.last_velocity = raw_vel / 65535.0 * (spec.v_max - lower) + lower
+        lower = spec.t_min
+        self.last_torque = raw_torque / 65535.0 * (spec.t_max - lower) + lower
         self.last_temp = raw_temp / 10.0
         self.last_fault = (data16 >> 8) & 0x3F
         self.last_mode_status = (data16 >> 14) & 0x03
@@ -197,9 +212,10 @@ class FeedbackHub:
     def route(self, msg, now=None):
         if not msg.is_extended_id:
             return None
-        comm_type, data16, destination = parse_arbitration_id(msg.arbitration_id)
-        if comm_type != COMM_FEEDBACK or destination != self.host_id:
+        arbitration_id = msg.arbitration_id
+        if (arbitration_id >> 24) & 0x1F != COMM_FEEDBACK or arbitration_id & 0xFF != self.host_id:
             return None
+        data16 = (arbitration_id >> 8) & 0xFFFF
         motor = self.motors.get(data16 & 0xFF)
         if motor is not None:
             motor.ingest_feedback(bytes(msg.data), data16=data16, now=time.monotonic() if now is None else now)

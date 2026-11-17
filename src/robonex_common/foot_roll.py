@@ -50,6 +50,10 @@ def _clip_foot_roll_scalar(upper, lower, upper_range, lower_range, coeffs, limit
     isfinite = math.isfinite
     if not all(map(isfinite, (u, l, limit, u_lo, u_hi, l_lo, l_hi, c0, c1, c2, c3, c4, c5))):
         return None
+    if limit == 0.0 or u_lo == 0.0 or u_hi == 0.0 or l_lo == 0.0 or l_hi == 0.0:
+        return None
+    if np.geterr()["under"] != "ignore":
+        return None
     for _ in range(iterations):
         roll = c0 + c1 * u + c2 * l + c3 * u * u + c4 * u * l + c5 * l * l
         excess = roll - min(max(roll, -limit), limit)
@@ -63,8 +67,11 @@ def _clip_foot_roll_scalar(upper, lower, upper_range, lower_range, coeffs, limit
         new_l = l - step * d_lower
         if not (isfinite(step) and isfinite(new_u) and isfinite(new_l)):
             return None
-        u = min(max(new_u, u_lo), u_hi)
-        l = min(max(new_l, l_lo), l_hi)
+        new_u = min(max(new_u, u_lo), u_hi)
+        new_l = min(max(new_l, l_lo), l_hi)
+        if new_u == u and new_l == l and new_u != 0.0 and new_l != 0.0:
+            break
+        u, l = new_u, new_l
     return np.float64(u), np.float64(l)
 
 

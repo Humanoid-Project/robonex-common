@@ -15,6 +15,27 @@ Bump `pyproject.toml` `version` and `__init__.__version__` in the same commit as
 
 <br>
 
+## 2.3.1 — 2026-11-17
+
+**Faster hot paths, same results (no behavior change).** Every function returns the same values, types and errors as
+2.3.0; `tests/test_fast_paths.py` compares each fast path with the 2.3.0 form bit for bit. The source hash changes, so
+a manifest exported with 2.3.0 fails the `common_sha256` check of a deploy pinned to 2.3.1: move training and deploy
+to 2.3.1 together.
+
+| Function | 2.3.0 | 2.3.1 | Change |
+| --- | --- | --- | --- |
+| `clip_foot_roll` (one ankle pair) | 63 µs | 2.8 µs | plain-float path for scalar inputs; the numpy body stays as `_clip_foot_roll_numpy` and takes every other input |
+| `ActionPipeline.apply` | 138 µs | 17 µs | through `clip_foot_roll` |
+| `ObservationHistory.append` / `.observation` | 5.0 / 7.0 µs | 1.2 / 2.3 µs | one copy instead of `np.roll`; cached term-major index |
+| `Motor.control` × 12 | 36 µs | 24 µs | `float_to_uint` without nested calls; `struct` packing |
+| `FeedbackHub.route` × 12 | 17 µs | 11 µs | inlined id test and feedback decoding |
+| `joint_limit_for` | 1.1 µs | 0.3 µs | no per-call id table |
+
+Laptop CPU, Python 3.10, numpy 2.2.6. `clip_foot_roll` uses the numpy body whenever an input is not a plain `float` /
+`np.float64`, a bound or the limit is zero, a value is not finite, or `np.geterr()["under"]` is not `"ignore"`.
+
+<br>
+
 ## 2.3.0 — 2026-11-15
 
 **Knee linkage of the corrected Ver.2-4 model: 100 mm knee crank (policy contract change).** The first Ver.2-4 package

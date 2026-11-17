@@ -1,6 +1,6 @@
 import math
 
-from .joints import JOINT_LIMITS_BY_NAME, MOTOR_LIMITS_BY_ID
+from .joints import JOINT_BY_ID, JOINT_LIMITS_BY_NAME, MOTOR_LIMITS_BY_ID
 from .models import action_pose, robot_model
 
 
@@ -32,9 +32,10 @@ def _action_scale(name, margin=DEFAULT_ACTION_MARGIN_RAD, model="ver2"):
 
 ACTION_SCALE_RAD = {name: _action_scale(name) for name in JOINT_LIMITS_BY_NAME}
 def joint_limit_for(motor_id, margin=DEFAULT_LIMIT_MARGIN_RAD, model="ver2"):
-    limits = robot_model(model).joint_limits_by_id()
-    if motor_id in limits:
-        lower, upper = limits[motor_id]
+    limits = robot_model(model).joint_limits
+    joint = JOINT_BY_ID.get(motor_id)
+    if joint is not None and joint.model_name in limits:
+        lower, upper = limits[joint.model_name]
     elif motor_id in MOTOR_LIMITS_BY_ID:
         lower, upper = MOTOR_LIMITS_BY_ID[motor_id]
     else:

@@ -32,11 +32,16 @@ VBUS_INDEX = 0x701C
 
 
 def clamp(value, lower, upper):
-    return max(lower, min(upper, value))
+    if not value < upper:
+        value = upper
+    return value if value > lower else lower
 
 
 def float_to_uint(value, lower, upper, bits):
-    value = clamp(value, lower, upper)
+    if not value < upper:
+        value = upper
+    if not value > lower:
+        value = lower
     return int((value - lower) / (upper - lower) * ((1 << bits) - 1))
 
 
