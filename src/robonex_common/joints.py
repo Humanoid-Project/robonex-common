@@ -1,3 +1,4 @@
+import math
 from dataclasses import dataclass
 
 from .buses import GROUPS, bus_map, channel_for_group
@@ -19,18 +20,18 @@ class JointSpec:
 
 
 ACTUATED_JOINTS = (
-    JointSpec(1, "l_hip_yaw_joint", "left_hip_yaw", "rs02", "left_leg", -0.837758, 0.837758),
-    JointSpec(2, "l_hip_pitch_joint", "left_hip_pitch", "rs03", "left_leg", -1.658063, 1.658063),
-    JointSpec(3, "l_hip_roll_joint", "left_hip_roll", "rs03", "left_leg", -2.094395, 0.174533),
-    JointSpec(4, "l_knee_pitch_joint", "left_knee_pitch", "rs03", "left_leg", -0.802851, 0.0),
-    JointSpec(5, "l_ankle_upper_joint", "left_ankle_upper", "rs02", "left_leg", -0.279253, 0.872665),
-    JointSpec(6, "l_ankle_lower_joint", "left_ankle_lower", "rs02", "left_leg", -0.872665, 0.523599),
-    JointSpec(7, "r_hip_yaw_joint", "right_hip_yaw", "rs02", "right_leg", -0.837758, 0.837758),
-    JointSpec(8, "r_hip_pitch_joint", "right_hip_pitch", "rs03", "right_leg", -1.658063, 1.658063),
-    JointSpec(9, "r_hip_roll_joint", "right_hip_roll", "rs03", "right_leg", -0.174533, 2.094395),
-    JointSpec(10, "r_knee_pitch_joint", "right_knee_pitch", "rs03", "right_leg", 0.0, 0.802851),
-    JointSpec(11, "r_ankle_upper_joint", "right_ankle_upper", "rs02", "right_leg", -0.872665, 0.279253),
-    JointSpec(12, "r_ankle_lower_joint", "right_ankle_lower", "rs02", "right_leg", -0.523599, 0.872665),
+    JointSpec(1, "l_hip_yaw_joint", "left_hip_yaw", "rs02", "left_leg", -0.799361, 0.759218),
+    JointSpec(2, "l_hip_pitch_joint", "left_hip_pitch", "rs03", "left_leg", -1.53938, 1.968731),
+    JointSpec(3, "l_hip_roll_joint", "left_hip_roll", "rs03", "left_leg", -2.513274, 0.225147),
+    JointSpec(4, "l_knee_pitch_joint", "left_knee_pitch", "rs03", "left_leg", -1.092576, 0.0),
+    JointSpec(5, "l_ankle_upper_joint", "left_ankle_upper", "rs02", "left_leg", -0.656244, 0.506145),
+    JointSpec(6, "l_ankle_lower_joint", "left_ankle_lower", "rs02", "left_leg", -0.593412, 0.472984),
+    JointSpec(7, "r_hip_yaw_joint", "right_hip_yaw", "rs02", "right_leg", -0.759218, 0.799361),
+    JointSpec(8, "r_hip_pitch_joint", "right_hip_pitch", "rs03", "right_leg", -1.968731, 1.53938),
+    JointSpec(9, "r_hip_roll_joint", "right_hip_roll", "rs03", "right_leg", -0.225147, 2.513274),
+    JointSpec(10, "r_knee_pitch_joint", "right_knee_pitch", "rs03", "right_leg", 0.0, 1.092576),
+    JointSpec(11, "r_ankle_upper_joint", "right_ankle_upper", "rs02", "right_leg", -0.506145, 0.656244),
+    JointSpec(12, "r_ankle_lower_joint", "right_ankle_lower", "rs02", "right_leg", -0.472984, 0.593412),
 )
 
 AUXILIARY_JOINTS = (
@@ -68,6 +69,23 @@ JOINT_BY_MODEL_NAME = {joint.model_name: joint for joint in ACTUATED_JOINTS}
 JOINT_BY_HARDWARE_NAME = {joint.hardware_name: joint for joint in ACTUATED_JOINTS}
 JOINT_LIMITS_BY_ID = {joint.motor_id: (joint.lower, joint.upper) for joint in ACTUATED_JOINTS}
 JOINT_LIMITS_BY_NAME = {joint.model_name: (joint.lower, joint.upper) for joint in ACTUATED_JOINTS}
+STOP_LIMITS_DEG = {
+    "l_hip_yaw_joint": (-46.8, 44.5),
+    "l_hip_pitch_joint": (-89.2, 113.8),
+    "l_hip_roll_joint": (-145.0, 13.9),
+    "l_knee_pitch_joint": (-63.6, 4.2),
+    "l_ankle_upper_joint": (-38.6, 31.2),
+    "l_ankle_lower_joint": (-36.2, 28.1),
+    "r_hip_yaw_joint": (-44.5, 46.8),
+    "r_hip_pitch_joint": (-113.8, 89.2),
+    "r_hip_roll_joint": (-13.9, 145.0),
+    "r_knee_pitch_joint": (-4.2, 63.6),
+    "r_ankle_upper_joint": (-31.2, 38.6),
+    "r_ankle_lower_joint": (-28.1, 36.2),
+}
+STOP_LIMITS_BY_NAME = {
+    name: (math.radians(lower), math.radians(upper)) for name, (lower, upper) in STOP_LIMITS_DEG.items()
+}
 DEFAULT_JOINT_POS = {
     "l_hip_yaw_joint": 0.0,
     "l_hip_pitch_joint": 0.13,

@@ -1,5 +1,5 @@
 import math
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 
 from .joints import (
     ACTUATED_JOINTS,
@@ -8,6 +8,7 @@ from .joints import (
     JOINT_BY_MODEL_NAME,
     JOINT_LIMITS_BY_NAME,
     MOTOR_BY_ID,
+    STOP_LIMITS_BY_NAME,
     VARIANT_MOTOR_IDS,
     canonical_variant,
 )
@@ -28,9 +29,16 @@ class RobotModel:
     foot_roll: FootRollClip | None = None
     motor_ids: tuple[int, ...] = ()
     leg_profile: str = ""
+    stop_limits: dict = field(default_factory=dict)
 
     def joint_limits_by_id(self):
         return {JOINT_BY_MODEL_NAME[name].motor_id: bounds for name, bounds in self.joint_limits.items()}
+
+    def stop_limits_by_id(self):
+        return {
+            JOINT_BY_MODEL_NAME[name].motor_id: self.stop_limits.get(name, bounds)
+            for name, bounds in self.joint_limits.items()
+        }
 
 
 VER2_EDU = RobotModel(
@@ -44,6 +52,7 @@ VER2_EDU = RobotModel(
     ),
     VARIANT_MOTOR_IDS["ver2"],
     "ver2_edu",
+    dict(STOP_LIMITS_BY_NAME),
 )
 VER2 = replace(VER2_EDU, name="ver2")
 
@@ -82,6 +91,14 @@ def _check(model):
     for name, (lower, upper) in model.joint_limits.items():
         if not lower < model.default_joint_pos[name] < upper:
             raise ValueError(f"robot model {model.name}: default pose of {name} is outside its limits")
+    if not set(model.stop_limits) <= names:
+        raise ValueError(f"robot model {model.name} gives a stop limit for an unknown joint")
+    for name, (lower, upper) in model.stop_limits.items():
+        if not lower < model.default_joint_pos[name] < upper:
+            raise ValueError(f"robot model {model.name}: default pose of {name} is outside its stop limit")
+        command_lower, command_upper = model.joint_limits[name]
+        if not lower <= command_lower < command_upper <= upper:
+            raise ValueError(f"robot model {model.name}: command limit of {name} is not inside its stop limit")
 
 
 def _check_variant(model):
@@ -91,8 +108,8 @@ def _check_variant(model):
     if not {joint.motor_id for joint in ACTUATED_JOINTS} <= set(model.motor_ids):
         raise ValueError(f"robot variant {model.name} is missing a leg motor")
     legs = ROBOT_MODELS.get(model.leg_profile)
-    if legs is None or (model.joint_limits, model.default_joint_pos, model.foot_roll) != (
-        legs.joint_limits, legs.default_joint_pos, legs.foot_roll
+    if legs is None or (model.joint_limits, model.default_joint_pos, model.foot_roll, model.stop_limits) != (
+        legs.joint_limits, legs.default_joint_pos, legs.foot_roll, legs.stop_limits
     ):
         raise ValueError(f"robot variant {model.name} does not share its leg profile {model.leg_profile!r}")
 

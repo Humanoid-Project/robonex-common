@@ -51,12 +51,12 @@ def test_action_zero_commands_the_standing_pose():
 def test_action_scales_match_the_independent_physical_contract():
     assert set(ACTION_SCALE_RAD) == set(POLICY_JOINT_ORDER)
     expected = {
-        "l_hip_yaw_joint": 0.25, "r_hip_yaw_joint": 0.25,
+        "l_hip_yaw_joint": 0.24974, "r_hip_yaw_joint": 0.24974,
         "l_hip_pitch_joint": 0.25, "r_hip_pitch_joint": 0.25,
         "l_knee_pitch_joint": 0.075494, "r_knee_pitch_joint": 0.075494,
-        "l_hip_roll_joint": 0.148886, "r_hip_roll_joint": 0.148886,
-        "l_ankle_upper_joint": 0.169625, "r_ankle_upper_joint": 0.169625,
-        "l_ankle_lower_joint": 0.211194, "r_ankle_lower_joint": 0.211194,
+        "l_hip_roll_joint": 0.178806, "r_hip_roll_joint": 0.178806,
+        "l_ankle_upper_joint": 0.085508, "r_ankle_upper_joint": 0.085508,
+        "l_ankle_lower_joint": 0.118109, "r_ankle_lower_joint": 0.118109,
     }
     assert ACTION_SCALE_RAD == pytest.approx(expected, abs=1e-6)
 

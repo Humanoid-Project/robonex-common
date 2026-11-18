@@ -35,7 +35,7 @@ robonex-common/
 | `buses` | Motor group → CAN channel (`DEFAULT_BUS_MAP`, `~/.config/robonex/bus_map.json`, `ROBONEX_BUS_MAP`) | - |
 | `motors` | RS00/RS02/RS03/RS05/RS10P specs, `MOTOR_PHYSICS`, kp/kd, rated/peak torque | - |
 | `actuators` | `ACTUATOR_PARAMETERS` (stiffness/damping/armature/friction) | - |
-| `limits` | Joint limits, `action_normalization` | - |
+| `limits` | Command limits, stop limits (`stop_limit_for`), `action_normalization` | - |
 | `models` | `ROBOT_MODELS` (leg profile `ver2_edu`), `VARIANTS` (`ver2` with `motor_ids`), `leg_profile` | - |
 | `protocol` | CAN type/index constants, `build_arbitration_id`, `decode_fault_bits` | - |
 | `can` | `Motor`, `FeedbackHub`, `drain` | `can` |

@@ -50,6 +50,27 @@ def exceeds_joint_limit(position, motor_id, margin=DEFAULT_LIMIT_MARGIN_RAD, mod
     return position <= lower or position >= upper
 
 
+def stop_limit_for(motor_id, margin=0.0, model="ver2"):
+    profile = robot_model(model)
+    joint = JOINT_BY_ID.get(motor_id)
+    if joint is not None and joint.model_name in profile.stop_limits:
+        lower, upper = profile.stop_limits[joint.model_name]
+    elif joint is not None and joint.model_name in profile.joint_limits:
+        lower, upper = profile.joint_limits[joint.model_name]
+    elif motor_id in MOTOR_LIMITS_BY_ID:
+        lower, upper = MOTOR_LIMITS_BY_ID[motor_id]
+    else:
+        raise KeyError(f"no stop limit for motor {motor_id}")
+    if margin < 0.0 or lower + margin >= upper - margin:
+        raise ValueError(f"invalid stop-limit margin for motor {motor_id}: {margin}")
+    return lower + margin, upper - margin
+
+
+def exceeds_stop_limit(position, motor_id, margin=0.0, model="ver2"):
+    lower, upper = stop_limit_for(motor_id, margin, model)
+    return position <= lower or position >= upper
+
+
 def action_normalization(margin=DEFAULT_ACTION_MARGIN_RAD, model="ver2", pose="home"):
     profile = robot_model(model)
     defaults = action_pose(model, pose)

@@ -13,12 +13,12 @@ from robonex_common.policy import PolicyContract
 from robonex_common.runtime import ActionPipeline
 
 CONTRACT_SCALES = {
-    "hip_yaw": 0.25, "hip_pitch": 0.25, "hip_roll": 0.148886,
-    "knee_pitch": 0.075494, "ankle_upper": 0.169625, "ankle_lower": 0.211194,
+    "hip_yaw": 0.24974, "hip_pitch": 0.25, "hip_roll": 0.178806,
+    "knee_pitch": 0.075494, "ankle_upper": 0.085508, "ankle_lower": 0.118109,
 }
 CONTRACT_LEFT_CLIPS = {
-    "hip_yaw": (-0.827758, 0.827758), "hip_pitch": (-1.648063, 1.648063), "hip_roll": (-2.084395, 0.164533),
-    "knee_pitch": (-0.792851, -0.01), "ankle_upper": (-0.269253, 0.862665), "ankle_lower": (-0.862665, 0.513599),
+    "hip_yaw": (-0.789361, 0.749218), "hip_pitch": (-1.52938, 1.958731), "hip_roll": (-2.503274, 0.215147),
+    "knee_pitch": (-1.082576, -0.01), "ankle_upper": (-0.646244, 0.496145), "ankle_lower": (-0.583412, 0.462984),
 }
 
 
@@ -145,6 +145,21 @@ def test_a_manifest_with_the_2_2_0_knee_contract_is_refused(tmp_path):
             payload["action_offsets"][i] = 0.3961936767101065
             payload["action_scales"][i] = 0.15782
             payload["target_clips"][i] = [-0.077266, 1.002291]
+    with pytest.raises(ValueError, match="action contract mismatch"):
+        _load(tmp_path, payload)
+
+
+def test_a_manifest_with_the_2_3_command_limits_is_refused(tmp_path):
+    old_left = {
+        "hip_yaw": (0.25, (-0.827758, 0.827758)), "hip_pitch": (0.25, (-1.648063, 1.648063)),
+        "hip_roll": (0.148886, (-2.084395, 0.164533)), "knee_pitch": (0.075494, (-0.792851, -0.01)),
+        "ankle_upper": (0.169625, (-0.269253, 0.862665)), "ankle_lower": (0.211194, (-0.862665, 0.513599)),
+    }
+    payload = _payload("ver2_edu")
+    for i, name in enumerate(POLICY_JOINT_ORDER):
+        scale, (lower, upper) = old_left[name[2:-6]]
+        payload["action_scales"][i] = scale
+        payload["target_clips"][i] = [lower, upper] if name.startswith("l_") else [-upper, -lower]
     with pytest.raises(ValueError, match="action contract mismatch"):
         _load(tmp_path, payload)
 

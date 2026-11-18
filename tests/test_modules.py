@@ -49,18 +49,18 @@ def test_runtime_reports_the_missing_policy_extra():
 
 
 VER2_EDU_JOINTS = {
-    1: ("l_hip_yaw_joint", "rs02", "can0", -0.837758, 0.837758),
-    2: ("l_hip_pitch_joint", "rs03", "can0", -1.658063, 1.658063),
-    3: ("l_hip_roll_joint", "rs03", "can0", -2.094395, 0.174533),
-    4: ("l_knee_pitch_joint", "rs03", "can0", -0.802851, 0.0),
-    5: ("l_ankle_upper_joint", "rs02", "can0", -0.279253, 0.872665),
-    6: ("l_ankle_lower_joint", "rs02", "can0", -0.872665, 0.523599),
-    7: ("r_hip_yaw_joint", "rs02", "can1", -0.837758, 0.837758),
-    8: ("r_hip_pitch_joint", "rs03", "can1", -1.658063, 1.658063),
-    9: ("r_hip_roll_joint", "rs03", "can1", -0.174533, 2.094395),
-    10: ("r_knee_pitch_joint", "rs03", "can1", 0.0, 0.802851),
-    11: ("r_ankle_upper_joint", "rs02", "can1", -0.872665, 0.279253),
-    12: ("r_ankle_lower_joint", "rs02", "can1", -0.523599, 0.872665),
+    1: ("l_hip_yaw_joint", "rs02", "can0", -0.799361, 0.759218),
+    2: ("l_hip_pitch_joint", "rs03", "can0", -1.53938, 1.968731),
+    3: ("l_hip_roll_joint", "rs03", "can0", -2.513274, 0.225147),
+    4: ("l_knee_pitch_joint", "rs03", "can0", -1.092576, 0.0),
+    5: ("l_ankle_upper_joint", "rs02", "can0", -0.656244, 0.506145),
+    6: ("l_ankle_lower_joint", "rs02", "can0", -0.593412, 0.472984),
+    7: ("r_hip_yaw_joint", "rs02", "can1", -0.759218, 0.799361),
+    8: ("r_hip_pitch_joint", "rs03", "can1", -1.968731, 1.53938),
+    9: ("r_hip_roll_joint", "rs03", "can1", -0.225147, 2.513274),
+    10: ("r_knee_pitch_joint", "rs03", "can1", 0.0, 1.092576),
+    11: ("r_ankle_upper_joint", "rs02", "can1", -0.506145, 0.656244),
+    12: ("r_ankle_lower_joint", "rs02", "can1", -0.472984, 0.593412),
 }
 MEASURED_PHYSICS = {
     "rs02": (0.0042, 0.0, 0.0, 0.0),

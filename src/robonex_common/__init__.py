@@ -1,4 +1,4 @@
-__version__ = "2.3.1"
+__version__ = "2.4.0"
 
 from .actuators import ACTUATOR_PARAMETERS, CONTROL_GAINS_BY_JOINT
 from .buses import BUS_MAP_FILE, DEFAULT_BUS_MAP, GROUPS, bus_map, channel_for_group
@@ -26,6 +26,8 @@ from .joints import (
     JOINT_LIMITS_BY_NAME,
     PASSIVE_CLOSED_LOOP_JOINTS,
     POLICY_JOINT_ORDER,
+    STOP_LIMITS_BY_NAME,
+    STOP_LIMITS_DEG,
     VARIANT_MOTOR_IDS,
     LEGACY_VARIANT_NAMES,
     canonical_variant,
@@ -42,7 +44,9 @@ from .limits import (
     action_limit_reach,
     action_normalization,
     exceeds_joint_limit,
+    exceeds_stop_limit,
     joint_limit_for,
+    stop_limit_for,
 )
 from .models import (
     ACTION_POSES,
@@ -168,6 +172,10 @@ __all__ = [
     "description_model",
     "drain",
     "exceeds_joint_limit",
+    "exceeds_stop_limit",
+    "stop_limit_for",
+    "STOP_LIMITS_BY_NAME",
+    "STOP_LIMITS_DEG",
     "float_to_uint",
     "git_commit",
     "joint_limit_for",

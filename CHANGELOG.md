@@ -15,6 +15,74 @@ Bump `pyproject.toml` `version` and `__init__.__version__` in the same commit as
 
 <br>
 
+## 2.4.0 — 2026-11-18
+
+**Joint limits from the 2026-11-17 measurement of the Ver.2-4 robot, split into command limits and stop limits
+(policy contract change, retraining needed).** The robot was hung on the stand and every leg motor moved by hand to
+its mechanical stops (user, 2026-11-17: the Ver.2-4 structure changed, so these measured stops replace the CAD-derived
+limits). One number per joint used to serve both the policy clip and the real-hardware emergency stop; it is now two:
+
+- **Command limit** (`JointSpec.lower` / `upper`, `JOINT_LIMITS_BY_NAME`, `RobotModel.joint_limits`): command clip,
+  action scale, URDF / MJCF / Isaac limits, `PolicyContract`. Changed for all 12 leg joints.
+- **Stop limit** (new): the measured mechanical stop. Used only by stop checks on the real robot (deploy runtime stop,
+  motor-test guards). Not part of the policy contract; changing it later needs no retraining.
+- Invariant, checked on `import robonex_common`: every command limit lies inside its stop limit.
+
+| Name | What |
+| --- | --- |
+| `STOP_LIMITS_DEG`, `STOP_LIMITS_BY_NAME` | stop limits in degrees and radians, by model joint name, all 12 leg joints |
+| `RobotModel.stop_limits`, `RobotModel.stop_limits_by_id()` | the table per robot model |
+| `stop_limit_for(motor_id, margin=0.0, model="ver2")` | `(lower + margin, upper - margin)`; motors outside the leg profile fall back to their motor limits |
+| `exceeds_stop_limit(position, motor_id, margin=0.0, model="ver2")` | `position <= lower or position >= upper` |
+
+`joint_limit_for` / `exceeds_joint_limit` keep meaning "command limit".
+
+Values in degrees, left leg (right leg mirrored by negation), each motor's own sign; crank angles for the knee and the
+ankles:
+
+| Joint | 2.3.x limit | 2.4.0 command limit | 2.4.0 stop limit | Source |
+| --- | --- | --- | --- | --- |
+| hip_yaw | −48.0 / +48.0 | **−45.8 / +43.5** | −46.8 / +44.5 | measured stop, tighter leg; command = stop − 1° |
+| hip_pitch | −95.0 / +95.0 | **−88.2 / +112.8** | −89.2 / +113.8 | same |
+| hip_roll | −120.0 / +10.0 | **−144.0 / +12.9** | −145.0 / +13.9 | same |
+| knee_pitch | −46.0 / 0.0 | **−62.6 / 0.0** | −63.6 / +4.2 | flexion: stop − 1°; straight end stays 0 (below) |
+| ankle_upper | −16.0 / +50.0 | **−37.6 / +29.0** | −38.6 / +31.2 | −: partner-held stop − 1°; +: walking maximum − 1° |
+| ankle_lower | −50.0 / +30.0 | **−34.0 / +27.1** | −36.2 / +28.1 | −: walking minimum − 1°; +: partner-held stop − 1° |
+
+- Stops are the tighter of the two legs, rounded inward to 0.1°. Data:
+  `departments/humanoid/data/hardware/2026-11-17_joint-limits/` (hips and knee 205340 / 205851, ankles partner-held
+  210814 / 210913).
+- **Knee straight end: command 0, stop +4.2.** A command limit of +3.2 leaves 3° of crank to the four-bar dead centre
+  (+6.17°); in the closed-loop MuJoCo model a 15 N·m hyperextension torque then snaps the knee through it (40 N·m with
+  the limit at 0).
+- **Ankles: a box around a coupled region.** The ankle cranks' reachable set is not a per-crank box: in the 2026-11-17
+  walking run (W190) the robot reached ankle_upper +30.0 and ankle_lower −35.1 while the partner-held single-crank
+  stops are +22.7 and −30.2. The command box takes the walking extremes minus 1° on those two sides, so `home` and
+  `lean25` normalise with the near fence at 3σ. Ankle stop limits: on the sides the walking run reached (upper +,
+  lower −) the run's extreme over both legs + 1°, rounded outward to 0.1° (+31.2, −36.2); on the other sides
+  command − 1° (−38.6, +28.1). The whole W190 run stays inside them (smallest margin 1.0°), which the hand-measured
+  single-crank stops would not allow. A target of upper +28 at lower 0 still lies past the real stop.
+  The 12° coupled foot-roll clip is unchanged and stays mandatory: it removes the same-sign corners of the box, where
+  the rod ends exceed their 15° limit.
+- Stops depend on each motor's zero calibration: re-zeroing a motor invalidates its row.
+
+Policy contract (left; right mirrored; margin 0.01 rad):
+
+| Joint | `ACTION_SCALE_RAD` 2.3.x | 2.4.0 | target clip 2.3.x (rad) | 2.4.0 (rad) |
+| --- | --- | --- | --- | --- |
+| hip_yaw | 0.25 | **0.24974** | −0.827758 / +0.827758 | −0.789361 / +0.749218 |
+| hip_pitch | 0.25 | 0.25 | −1.648063 / +1.648063 | −1.52938 / +1.958731 |
+| hip_roll | 0.148886 | **0.178806** | −2.084395 / +0.164533 | −2.503274 / +0.215147 |
+| knee_pitch | 0.075494 | 0.075494 | −0.792851 / −0.01 | −1.082576 / −0.01 |
+| ankle_upper | 0.169625 | **0.085508** | −0.269253 / +0.862665 | −0.646244 / +0.496145 |
+| ankle_lower | 0.211194 | **0.118109** | −0.862665 / +0.513599 | −0.583412 / +0.462984 |
+
+**Every manifest exported before 2.4.0 fails `PolicyContract.validate()`: policies must be retrained** on the
+matching robonex-description rebuild (URDF, MJCF and Isaac limits from these command limits). Default poses, the
+foot-roll clip and the joint order are unchanged. The source hash changes as with every release.
+
+<br>
+
 ## 2.3.1 — 2026-11-17
 
 **Faster hot paths, same results (no behavior change).** Every function returns the same values, types and errors as
