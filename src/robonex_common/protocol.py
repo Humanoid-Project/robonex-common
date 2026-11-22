@@ -31,16 +31,30 @@ ZERO_STATUS_INDEX = 0x7029
 VBUS_INDEX = 0x701C
 
 
+_INF = float("inf")
+_NEG_INF = float("-inf")
+
+
 def clamp(value, lower, upper):
     if not value < upper:
+        if value != value or value == _INF or value == _NEG_INF:
+            raise ValueError(f"non-finite value {value!r}")
         value = upper
-    return value if value > lower else lower
+    if value > lower:
+        return value
+    if value == _NEG_INF:
+        raise ValueError(f"non-finite value {value!r}")
+    return lower
 
 
 def float_to_uint(value, lower, upper, bits):
     if not value < upper:
+        if value != value or value == _INF or value == _NEG_INF:
+            raise ValueError(f"non-finite value {value!r}")
         value = upper
     if not value > lower:
+        if value == _NEG_INF:
+            raise ValueError(f"non-finite value {value!r}")
         value = lower
     return int((value - lower) / (upper - lower) * ((1 << bits) - 1))
 

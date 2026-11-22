@@ -1,3 +1,4 @@
+import math
 import struct
 import time
 
@@ -109,6 +110,8 @@ class Motor:
         self._send(COMM_PARAMETER_WRITE, self.host_id, data)
 
     def write_parameter_f32(self, index, value):
+        if not math.isfinite(value):
+            raise ValueError(f"non-finite parameter value {value!r} for index {index:#06x}")
         data = bytearray(8)
         struct.pack_into("<H", data, 0, index)
         struct.pack_into("<f", data, 4, value)

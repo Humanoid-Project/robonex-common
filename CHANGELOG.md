@@ -15,6 +15,18 @@ Bump `pyproject.toml` `version` and `__init__.__version__` in the same commit as
 
 <br>
 
+## 2.4.1 — 2026-11-22
+
+**Non-finite motor commands are refused (bug fix, no change for finite values).** Up to 2.4.0, `clamp` and
+`float_to_uint` turned NaN and +inf into the upper bound and -inf into the lower bound, so a NaN position, velocity,
+gain or torque was sent to the motor as a full-scale value. Now both raise `ValueError("non-finite value ...")`, and
+`Motor.control` sends nothing when any field is non-finite. `Motor.write_parameter_f32` refuses NaN and inf the same way.
+Finite values give the same results as 2.4.0, bit for bit, at the same speed: the check runs only when a value is at or
+past a bound. The policy contract is unchanged; the source hash changes, so manifests exported with 2.4.0 must be
+re-exported (not retrained) for a deploy pinned to 2.4.1, and code that checks `__version__` moves with it.
+
+<br>
+
 ## 2.4.0 — 2026-11-18
 
 **Joint limits from the 2026-11-17 measurement of the Ver.2-4 robot, split into command limits and stop limits

@@ -247,7 +247,10 @@ def test_observation_is_a_fresh_array_each_call():
 
 
 def _reference_clamp(value, lower, upper):
-    return max(lower, min(upper, value))
+    bounded = min(upper, value)
+    if value != value or value == INF or value == -INF:
+        raise ValueError
+    return max(lower, bounded)
 
 
 def _reference_float_to_uint(value, lower, upper, bits):
@@ -312,6 +315,11 @@ def test_control_frames_match_the_byte_by_byte_encoding():
             args = [np.float64(value) for value in args]
         if index % 7 == 0:
             args[index % 5] = odd[index // 7 % len(odd)]
+        if any(value != value or value in (INF, -INF) for value in args):
+            with pytest.raises(ValueError):
+                motor.control(*args)
+            assert bus.sent == []
+            continue
         motor.control(*args)
         message = bus.sent.pop()
         assert (message.arbitration_id, bytes(message.data)) == _reference_control_frame(motor.motor_id, spec, *args)
