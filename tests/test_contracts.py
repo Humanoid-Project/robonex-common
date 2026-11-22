@@ -359,13 +359,13 @@ def test_observation_history_follows_the_manifest_layout():
     assert (walking.frame_size, walking.history_length, walking.expected_size) == (47, 5, 235)
 
     # a manifest without an "x<history>" suffix is a single-frame layout
-    balancing = ObservationHistory.from_contract(
+    single_frame = ObservationHistory.from_contract(
         _Contract(
             ("joint_pos_rel:12", "joint_vel_rel:12", "imu_ang_vel:3", "projected_gravity:3", "last_action:12"),
             42,
         )
     )
-    assert (balancing.frame_size, balancing.history_length, balancing.expected_size) == (42, 1, 42)
+    assert (single_frame.frame_size, single_frame.history_length, single_frame.expected_size) == (42, 1, 42)
 
     with pytest.raises(ValueError, match="observation_size"):
         ObservationHistory.from_contract(_Contract(("joint_pos_rel:12x5",), 42))

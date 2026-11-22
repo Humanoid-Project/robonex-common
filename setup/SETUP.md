@@ -45,7 +45,7 @@ PYTHON=python3.10 ./setup/setup.sh
 ## `setup_isaacsim.sh`
 
 Creates the `isaacsim` conda env (Isaac Sim 5.1.0, Isaac Lab v2.3.2) used by
-`robonex-balancing` and `robonex-walking`. Must be `source`d, not `bash`ed.
+`robonex-walking`. Must be `source`d, not `bash`ed.
 
 ```bash
 # Example
@@ -81,5 +81,4 @@ pip install "robonex-common[can,policy] @ git+https://github.com/Humanoid-Projec
 | `robonex-description` | `robonex-common` | `.venv` |
 | `robstride-motor-test` | `robonex-common[can]` | `.venv` |
 | `robonex-deploy` | `robonex-common[can,policy]` | `.venv` |
-| `robonex-balancing` | `robonex-common` | conda `isaacsim` |
 | `robonex-walking` | `robonex-common` | conda `isaacsim` |
