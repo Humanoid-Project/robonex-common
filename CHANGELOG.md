@@ -15,6 +15,18 @@ Bump `pyproject.toml` `version` and `__init__.__version__` in the same commit as
 
 <br>
 
+## 2.5.0 — 2026-11-26
+
+**Neck motor IDs swapped (user, 2026-11-26): `neck_yaw_joint` is ID 26, `neck_pitch_joint` is ID 27** (was 26 pitch,
+27 yaw since 2.0.0). Names, motor model (rs05), group `head` (26–28, 28 reserved), CAN bus `can4`, limits (pitch
+±1.27409 rad, yaw ±0.523599 rad placeholder) and gains (20 / 1 placeholder) move with the joint. `AUXILIARY_JOINTS`
+stays in ID order, so its last two entries change places; `VARIANT_MOTOR_IDS`, `ALL_MOTORS` size and the 12-leg policy
+contract (IDs 1–12, `POLICY_JOINT_ORDER`, limits, default pose) are unchanged. The source hash changes: manifests exported
+with 2.4.x must be re-exported (not retrained) for a deploy pinned to 2.5.0. Code or tools that address a neck motor by
+number (deploy bench tools and tests, motor-test commands) must use 26 = yaw, 27 = pitch.
+
+<br>
+
 ## 2.4.1 — 2026-11-22
 
 **Non-finite motor commands are refused (bug fix, no change for finite values).** Up to 2.4.0, `clamp` and

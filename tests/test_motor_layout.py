@@ -52,8 +52,8 @@ def test_new_motor_names_and_models():
         23: ("r_shoulder_yaw_joint", "right_shoulder_yaw", "rs00", "right_arm"),
         24: ("r_elbow_joint", "right_elbow", "rs00", "right_arm"),
         25: ("r_wrist_yaw_joint", "right_wrist_yaw", "rs05", "right_arm"),
-        26: ("neck_pitch_joint", "neck_pitch", "rs05", "head"),
-        27: ("neck_yaw_joint", "neck_yaw", "rs05", "head"),
+        26: ("neck_yaw_joint", "neck_yaw", "rs05", "head"),
+        27: ("neck_pitch_joint", "neck_pitch", "rs05", "head"),
     }
     for motor_id, fields in expected.items():
         joint = MOTOR_BY_ID[motor_id]
@@ -100,8 +100,8 @@ def test_placeholder_gains_and_limits():
     assert JOINT_CONTROL_GAINS["wrist_yaw"] == (10.0, 0.5)
     for role in ("shoulder_pitch", "shoulder_roll", "shoulder_yaw", "elbow"):
         assert JOINT_CONTROL_GAINS[role] == (40.0, 2.0)
-    assert MOTOR_LIMITS_BY_ID[26] == pytest.approx((-1.27409, 1.27409))
-    assert MOTOR_LIMITS_BY_ID[27] == pytest.approx((-0.523599, 0.523599))
+    assert MOTOR_LIMITS_BY_ID[26] == pytest.approx((-0.523599, 0.523599))
+    assert MOTOR_LIMITS_BY_ID[27] == pytest.approx((-1.27409, 1.27409))
     for motor_id in (16, 21):
         assert MOTOR_LIMITS_BY_ID[motor_id] == pytest.approx((-1.745329, 1.745329))
     for motor_id in (17, 18, 19, 20, 22, 23, 24, 25):

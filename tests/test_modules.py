@@ -321,11 +321,11 @@ def test_auxiliary_motors_extend_the_policy_joints_without_changing_them():
     from robonex_common.limits import joint_limit_for
 
     assert tuple(joint.motor_id for joint in AUXILIARY_JOINTS) == (16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27)
-    head = MOTOR_BY_ID[26]
+    head = MOTOR_BY_ID[27]
     assert head.model_name == "neck_pitch_joint"
     assert head.motor_model == "rs05"
     assert head.group == "head"
-    assert 26 not in JOINT_BY_ID
+    assert 27 not in JOINT_BY_ID
     assert len(ALL_MOTORS) == 24
     assert len({joint.motor_id for joint in ALL_MOTORS}) == 24
     for joint in ALL_MOTORS:

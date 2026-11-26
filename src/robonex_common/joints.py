@@ -45,8 +45,8 @@ AUXILIARY_JOINTS = (
     JointSpec(23, "r_shoulder_yaw_joint", "right_shoulder_yaw", "rs00", "right_arm", -0.785398, 0.785398),
     JointSpec(24, "r_elbow_joint", "right_elbow", "rs00", "right_arm", -0.785398, 0.785398),
     JointSpec(25, "r_wrist_yaw_joint", "right_wrist_yaw", "rs05", "right_arm", -0.785398, 0.785398),
-    JointSpec(26, "neck_pitch_joint", "neck_pitch", "rs05", "head", -1.27409, 1.27409),
-    JointSpec(27, "neck_yaw_joint", "neck_yaw", "rs05", "head", -0.523599, 0.523599),
+    JointSpec(26, "neck_yaw_joint", "neck_yaw", "rs05", "head", -0.523599, 0.523599),
+    JointSpec(27, "neck_pitch_joint", "neck_pitch", "rs05", "head", -1.27409, 1.27409),
 )
 ALL_MOTORS = ACTUATED_JOINTS + AUXILIARY_JOINTS
 GROUP_ID_RANGES = {
