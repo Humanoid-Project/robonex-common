@@ -1,6 +1,6 @@
-__version__ = "2.5.0"
+__version__ = "2.6.0"
 
-from .actuators import ACTUATOR_PARAMETERS, CONTROL_GAINS_BY_JOINT
+from .actuators import ACTUATOR_PARAMETERS, CONTROL_GAINS_BY_JOINT, control_gains
 from .buses import BUS_MAP_FILE, DEFAULT_BUS_MAP, GROUPS, bus_map, channel_for_group
 from .can import FeedbackHub, Motor, drain
 from .imu import (
@@ -29,6 +29,9 @@ from .joints import (
     STOP_LIMITS_BY_NAME,
     STOP_LIMITS_DEG,
     VARIANT_MOTOR_IDS,
+    VER3_NAME_BY_ID,
+    VER3_PASSIVE_CLOSED_LOOP_JOINTS,
+    VER3_POLICY_JOINT_ORDER,
     LEGACY_VARIANT_NAMES,
     canonical_variant,
     JointSpec,
@@ -55,6 +58,8 @@ from .models import (
     VARIANTS,
     VER2,
     VER2_EDU,
+    VER3,
+    VER3_MODELS,
     FootRollClip,
     RobotModel,
     action_pose,
@@ -121,6 +126,7 @@ __all__ = [
     "canonical_variant",
     "ACTUATOR_PARAMETERS",
     "CONTROL_GAINS_BY_JOINT",
+    "control_gains",
     "BALANCING_REPO_NAMES",
     "CHANNEL_MOTOR_IDS",
     "COMMON_REPO_NAMES",
@@ -190,6 +196,11 @@ __all__ = [
     "VARIANTS",
     "VER2",
     "VER2_EDU",
+    "VER3",
+    "VER3_MODELS",
+    "VER3_NAME_BY_ID",
+    "VER3_PASSIVE_CLOSED_LOOP_JOINTS",
+    "VER3_POLICY_JOINT_ORDER",
     "FootRollClip",
     "action_pose",
     "RobotModel",

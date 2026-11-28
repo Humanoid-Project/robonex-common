@@ -150,6 +150,43 @@ PASSIVE_CLOSED_LOOP_JOINTS = (
     "l_ankle_pitch_joint",
     "r_ankle_pitch_joint",
 )
+VER3_NAME_BY_ID = {
+    1: "left_hip_yaw_joint",
+    2: "left_hip_pitch_joint",
+    3: "left_hip_roll_joint",
+    4: "left_knee_pitch_joint",
+    5: "left_ankle_upper_joint",
+    6: "left_ankle_lower_joint",
+    7: "right_hip_yaw_joint",
+    8: "right_hip_pitch_joint",
+    9: "right_hip_roll_joint",
+    10: "right_knee_pitch_joint",
+    11: "right_ankle_upper_joint",
+    12: "right_ankle_lower_joint",
+    16: "left_shoulder_pitch_joint",
+    17: "left_shoulder_roll_joint",
+    18: "left_shoulder_yaw_joint",
+    19: "left_elbow_joint",
+    20: "left_wrist_roll_joint",
+    21: "right_shoulder_pitch_joint",
+    22: "right_shoulder_roll_joint",
+    23: "right_shoulder_yaw_joint",
+    24: "right_elbow_joint",
+    25: "right_wrist_roll_joint",
+    26: "neck_yaw_joint",
+    27: "neck_pitch_joint",
+}
+VER3_POLICY_JOINT_ORDER = tuple(VER3_NAME_BY_ID[JOINT_BY_MODEL_NAME[name].motor_id] for name in POLICY_JOINT_ORDER)
+VER3_PASSIVE_CLOSED_LOOP_JOINTS = (
+    "left_knee_joint",
+    "right_knee_joint",
+    "left_knee_coupler_joint",
+    "right_knee_coupler_joint",
+    "left_ankle_roll_joint",
+    "right_ankle_roll_joint",
+    "left_ankle_pitch_joint",
+    "right_ankle_pitch_joint",
+)
 
 
 def canonical_variant(name):

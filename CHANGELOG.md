@@ -15,6 +15,33 @@ Bump `pyproject.toml` `version` and `__init__.__version__` in the same commit as
 
 <br>
 
+## 2.6.0 — 2026-11-28
+
+**New robot model `ver3` (Ver.3, G1-format joint names; user decision 2026-11-27). ver2 is unchanged.** Same motors,
+IDs, CAN groups, limits, stops, default pose, foot-roll clip and gains as ver2, with the names of robonex-description
+`ver3/ver3_constants.json`: `l_`/`r_` → `left_`/`right_`, `wrist_yaw` → `wrist_roll` (IDs 20 / 25), neck names
+unchanged. Policy joint order `VER3_POLICY_JOINT_ORDER` is the ver2 order through motor IDs (Isaac articulation order).
+Passive joints `<side>_knee_joint`, `<side>_knee_coupler_joint`, `<side>_ankle_roll_joint`, `<side>_ankle_pitch_joint`.
+
+- New names: `VER3`, `VER3_MODELS`, `VER3_NAME_BY_ID`, `VER3_POLICY_JOINT_ORDER`, `VER3_PASSIVE_CLOSED_LOOP_JOINTS`,
+  `control_gains(model)`; `RobotModel` fields `names_by_id`, `policy_joint_order`, `passive_joints`, `hold_joint_pos`
+  and methods `motor_id_for`, `hold_joint_pos_by_id`. `ver3.hold_joint_pos` holds the 10 arm and 2 neck motors at 0
+  (URDF zero: arms down, elbows 90°, forearms forward).
+- `robot_model("ver3")`, `joint_limit_for` / `stop_limit_for` / `action_normalization(model="ver3")` and
+  `PolicyContract` with `robot_model: "ver3"` work by name per model. A ver3 manifest must use the ver3 names and order; ver2 names
+  are refused there and ver3 names under ver2.
+- **`ver3` is deliberately not in `ROBOT_MODELS`, `LEG_PROFILES`, `VARIANTS` or `VARIANT_MOTOR_IDS`.** Callers iterate
+  them with ver2 names (walking `export_policy_manifest.infer_robot_model`) or infer the model from limits by ID (deploy
+  `safety.py`), where ver3 would raise `KeyError` or make the match ambiguous. A deploy robot identity `ver3` is still
+  refused. Each repo adds ver3 explicitly when it supports it.
+- Arm and neck limits stay the by-ID placeholders (`MOTOR_LIMITS_BY_ID`); no sign field (motor angle = URDF joint angle).
+  The ver3 elbow zero differs from ver2's: the elbow motors must be zeroed in the ver3 pose before a ver3 deploy.
+- ver2: every public name and value, every limit / normalization / contract result and 20 000 pipeline steps are equal
+  to 2.5.0. Only the "unknown robot model" message now also lists `ver3`. The source hash changes: manifests exported
+  with 2.5.0 must be re-exported (not retrained) for a deploy pinned to 2.6.0.
+
+<br>
+
 ## 2.5.0 — 2026-11-26
 
 **Neck motor IDs swapped (user, 2026-11-26): `neck_yaw_joint` is ID 26, `neck_pitch_joint` is ID 27** (was 26 pitch,

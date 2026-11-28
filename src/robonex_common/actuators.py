@@ -36,3 +36,14 @@ ACTUATOR_PARAMETERS = {
     }
     for model, values in MOTOR_PHYSICS.items()
 }
+
+
+def control_gains(model="ver2"):
+    from .models import robot_model
+
+    profile = robot_model(model)
+    return {
+        profile.names_by_id[joint.motor_id]: CONTROL_GAINS_BY_JOINT[joint.model_name]
+        for joint in ALL_MOTORS
+        if joint.motor_id in profile.motor_ids
+    }

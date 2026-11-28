@@ -4,7 +4,7 @@ import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from pathlib import Path
 
-from .joints import JOINT_BY_MODEL_NAME, PASSIVE_CLOSED_LOOP_JOINTS, POLICY_JOINT_ORDER
+from .joints import JOINT_BY_ID, JOINT_BY_MODEL_NAME, PASSIVE_CLOSED_LOOP_JOINTS, POLICY_JOINT_ORDER
 from .limits import action_normalization
 from .models import robot_model
 
@@ -118,11 +118,12 @@ class PolicyContract:
             raise ValueError("action_size and joint_order length differ")
         if len(set(self.joint_order)) != len(self.joint_order):
             raise ValueError("joint_order contains duplicates")
-        if any(name not in JOINT_BY_MODEL_NAME for name in self.joint_order):
+        actuated = {model.names_by_id[motor_id] for motor_id in JOINT_BY_ID}
+        if any(name not in actuated for name in self.joint_order):
             raise ValueError("joint_order contains an unknown or passive joint")
-        if any(name in PASSIVE_CLOSED_LOOP_JOINTS for name in self.joint_order):
+        if any(name in model.passive_joints for name in self.joint_order):
             raise ValueError("policy must not target passive closed-loop joints")
-        if tuple(self.joint_order) != tuple(POLICY_JOINT_ORDER):
+        if tuple(self.joint_order) != tuple(model.policy_joint_order):
             raise ValueError(
                 "joint_order must match POLICY_JOINT_ORDER exactly; "
                 "a permuted order swaps legs at deploy time without any error"
