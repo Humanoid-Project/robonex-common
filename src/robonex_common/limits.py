@@ -1,6 +1,6 @@
 import math
 
-from .joints import JOINT_BY_ID, JOINT_LIMITS_BY_NAME, MOTOR_LIMITS_BY_ID
+from .joints import AUXILIARY_JOINTS, JOINT_BY_ID, JOINT_LIMITS_BY_NAME, MOTOR_LIMITS_BY_ID
 from .models import action_pose, robot_model
 
 
@@ -105,3 +105,34 @@ def action_limit_reach(margin=DEFAULT_ACTION_MARGIN_RAD, model="ver2"):
                (clips[name][1] - offsets[name]) / scales[name])
         for name in clips
     }
+
+
+PLACEHOLDER_LIMIT_MOTOR_IDS = tuple(sorted(joint.motor_id for joint in AUXILIARY_JOINTS))
+PLACEHOLDER_CONSENT_FLAG = "--allow-placeholder-limits"
+
+
+class PlaceholderLimitError(ValueError):
+    pass
+
+
+def limit_status(motor_id):
+    if motor_id in PLACEHOLDER_LIMIT_MOTOR_IDS:
+        return "placeholder"
+    if motor_id in JOINT_BY_ID:
+        return "measured"
+    raise ValueError(f"motor ID {motor_id} is not a registered motor")
+
+
+def placeholder_motor_ids(motor_ids):
+    return tuple(sorted({motor_id for motor_id in motor_ids if limit_status(motor_id) == "placeholder"}))
+
+
+def require_placeholder_consent(motor_ids, allowed):
+    found = placeholder_motor_ids(motor_ids)
+    if found and not allowed:
+        ids = ", ".join(str(motor_id) for motor_id in found)
+        raise PlaceholderLimitError(
+            f"motor IDs {ids} have placeholder limits (not measured); "
+            f"pass {PLACEHOLDER_CONSENT_FLAG} to move them inside those limits"
+        )
+    return found

@@ -139,6 +139,8 @@ class Motor:
                 continue
             payload = bytes(msg.data)
             if len(payload) >= 8 and int.from_bytes(payload[0:2], "little") == index:
+                if data16 >> 8:
+                    return None
                 return struct.unpack_from(fmt, payload, 4)[0]
         return None
 

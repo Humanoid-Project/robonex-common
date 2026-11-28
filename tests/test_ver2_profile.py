@@ -34,7 +34,7 @@ def _payload(model, schema=3):
         "training_sha256": "3" * 64,
         "description_model": "ver2/mujoco/robot/edu/scene_fixed.xml",
         "joint_order": list(POLICY_JOINT_ORDER),
-        "observation_terms": ["joint_pos"],
+        "observation_terms": ["joint_pos:42"],
         "action_offsets": [offsets[name] for name in POLICY_JOINT_ORDER],
         "action_scales": [scales[name] for name in POLICY_JOINT_ORDER],
         "target_clips": [list(clips[name]) for name in POLICY_JOINT_ORDER],

@@ -1,8 +1,16 @@
-__version__ = "2.6.0"
+__version__ = "2.7.0"
 
 from .actuators import ACTUATOR_PARAMETERS, CONTROL_GAINS_BY_JOINT, control_gains
-from .buses import BUS_MAP_FILE, DEFAULT_BUS_MAP, GROUPS, bus_map, channel_for_group
+from .buses import BUS_MAP_FILE, DEFAULT_BUS_MAP, GROUPS, BusMapError, bus_map, channel_for_group
 from .can import FeedbackHub, Motor, drain
+from .identity import (
+    ROBOT_IDENTITY_ENV,
+    ROBOT_IDENTITY_FILE,
+    IdentityError,
+    identity_path,
+    read_identity,
+    require_identity,
+)
 from .imu import (
     DEFAULT_IMU_BAUDRATE,
     DEFAULT_IMU_PORT,
@@ -43,12 +51,18 @@ from .limits import (
     ACTION_SCALE_RAD,
     DEFAULT_ACTION_MARGIN_RAD,
     DEFAULT_LIMIT_MARGIN_RAD,
+    PLACEHOLDER_CONSENT_FLAG,
+    PLACEHOLDER_LIMIT_MOTOR_IDS,
     RUNNER_ACTION_CLIP,
+    PlaceholderLimitError,
     action_limit_reach,
     action_normalization,
     exceeds_joint_limit,
     exceeds_stop_limit,
     joint_limit_for,
+    limit_status,
+    placeholder_motor_ids,
+    require_placeholder_consent,
     stop_limit_for,
 )
 from .models import (
@@ -89,14 +103,16 @@ from .paths import (
     WALKING_REPO_NAMES,
     description_model,
     git_commit,
+    git_dirty,
     repo_file,
     resolve_repo,
 )
-from .policy import PolicyContract, sha256_file
+from .policy import PolicyContract, parse_observation_terms, sha256_file
 from .protocol import (
     DEFAULT_INTERFACE,
     FAULT_BIT_NAMES,
     HOST_ID,
+    OVERTEMP_FAULT_C,
     build_arbitration_id,
     clamp,
     decode_fault_bits,
@@ -206,4 +222,20 @@ __all__ = [
     "RobotModel",
     "leg_profile",
     "robot_model",
+    "BusMapError",
+    "IdentityError",
+    "OVERTEMP_FAULT_C",
+    "PLACEHOLDER_CONSENT_FLAG",
+    "PLACEHOLDER_LIMIT_MOTOR_IDS",
+    "PlaceholderLimitError",
+    "ROBOT_IDENTITY_ENV",
+    "ROBOT_IDENTITY_FILE",
+    "git_dirty",
+    "identity_path",
+    "limit_status",
+    "parse_observation_terms",
+    "placeholder_motor_ids",
+    "read_identity",
+    "require_identity",
+    "require_placeholder_consent",
 ]

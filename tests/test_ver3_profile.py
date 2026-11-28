@@ -91,7 +91,7 @@ def _v3_payload():
 
 
 def test_version():
-    assert __version__ == "2.6.0"
+    assert __version__ == "2.7.0"
 
 
 def test_ver3_names_match_the_description_constants():
@@ -230,7 +230,7 @@ def test_ver3_contract_refuses_a_permuted_order(tmp_path):
 def test_ver3_contract_refuses_passive_auxiliary_and_ver2_names(tmp_path, name):
     payload = _v3_payload()
     payload["joint_order"][0] = name
-    with pytest.raises(ValueError, match="unknown or passive joint"):
+    with pytest.raises(ValueError, match="unknown or passive joint|passive closed-loop"):
         _load(tmp_path, payload)
 
 

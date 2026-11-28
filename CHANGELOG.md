@@ -15,6 +15,44 @@ Bump `pyproject.toml` `version` and `__init__.__version__` in the same commit as
 
 <br>
 
+## 2.7.0 — 2026-11-28
+
+**Fixes and shared rules from the 2026-11-28 open-items audit (user decisions 2026-11-28). Action values and the
+accepted ver2/ver3 manifests are unchanged; source hash changes (re-export, no retrain).**
+
+- `Motor.read_parameter` returns `None` when the type-17 reply carries the fail status (ID bits 23-16 = 01, manual
+  "parameter read"); 2.6.0 returned the reply's zero payload as a value, so a failed `0x3022` read looked like
+  "no fault" and a failed mechPos read looked like 0.0 rad (deploy zero-position preflight, `set_motor_pose` ramp start).
+- `PolicyContract.validate` refuses NaN or infinity in offsets, scales, target clips, `runner_action_clip`, `policy_hz`
+  and the foot-roll fields; parses `observation_terms` (`name:size` / `name:sizexhistory`, one history length, size and
+  history >= 1) and refuses a sum that differs from `observation_size`. New `parse_observation_terms`, also used by
+  `ObservationHistory.from_contract` (same messages). A passive joint in `joint_order` now gets the specific
+  "passive closed-loop" message (the branch was unreachable).
+- Placeholder limits and one consent rule (user: 16/21/27 are placeholders too): `PLACEHOLDER_LIMIT_MOTOR_IDS` = 16-27
+  (every arm and head motor), `limit_status(motor_id)` -> `measured` (legs) / `placeholder`,
+  `placeholder_motor_ids(ids)`, `require_placeholder_consent(ids, allowed)` raising `PlaceholderLimitError` unless
+  `allowed`; the flag every motion tool uses is `PLACEHOLDER_CONSENT_FLAG` = `--allow-placeholder-limits`.
+- Robot identity reader (`identity.py`): `ROBOT_IDENTITY_ENV` (`ROBONEX_ROBOT_MODEL_FILE`), `ROBOT_IDENTITY_FILE`
+  (`~/.config/robonex/robot_model`), `identity_path()`, `read_identity(path=None)` (missing or empty -> `None`;
+  unreadable, a directory or not UTF-8 -> `IdentityError` with the path), `require_identity(path=None)` (no file ->
+  `IdentityError`, for tools that must refuse to move motors without one). It does not choose a fallback.
+- `bus_map()` raises `BusMapError` (a `ValueError`) with the path for bad JSON, a non-object, an unreadable file, unknown
+  groups or bad channels (bad JSON was a raw `JSONDecodeError`). It still raises at import; a missing file still means
+  the defaults.
+- `gait_phase_at(..., command=None, deadband=GAIT_COMMAND_DEADBAND)`: with a command whose norm is not > 0.05 (NaN included) the clock is
+  (0, 0), as in training (`norm > command_deadband` 0.05); `command=None` is bit-identical to 2.6.0.
+- `git_dirty(path)`: tracked or staged changes (untracked files ignored).
+- Overtemperature label: `FAULT_BIT_NAMES[0]` says 135 C for RS02/RS05 and 145 C for RS00/RS03/RS10P (was 145 C for
+  all); `OVERTEMP_FAULT_C` per motor model and `decode_fault_bits(value, motor_model=None)`.
+- Import checks: a hold table covers every auxiliary motor or none; passive joints complete and unique; foot-roll pairs
+  are exactly the ankle motors (5, 6, +1) and (11, 12, -1); stop limits cover every actuated joint; ver3 leg values
+  equal ver2_edu by motor ID.
+- Callers to update in their repos: deploy and motor-test use `require_placeholder_consent` with the flag (one rule),
+  motor-test refuses to move motors without an identity file (`require_identity`), the three gait-mask copies can pass
+  `command=`, the exporter can refuse a dirty tree with `git_dirty`.
+
+<br>
+
 ## 2.6.0 — 2026-11-28
 
 **New robot model `ver3` (Ver.3, G1-format joint names; user decision 2026-11-27). ver2 is unchanged.** Same motors,

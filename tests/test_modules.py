@@ -227,7 +227,7 @@ def _contract():
         training_sha256="3" * 64,
         description_model="ver2/mujoco/robot/edu/scene_fixed.xml",
         joint_order=POLICY_JOINT_ORDER,
-        observation_terms=("joint_pos_rel:12",),
+        observation_terms=("joint_pos_rel:42",),
         action_offsets=tuple(offsets[n] for n in POLICY_JOINT_ORDER),
         action_scales=tuple(scales[n] for n in POLICY_JOINT_ORDER),
         target_clips=tuple(clips[n] for n in POLICY_JOINT_ORDER),

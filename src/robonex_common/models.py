@@ -22,6 +22,7 @@ from .joints import (
 )
 
 VER2_NAME_BY_ID = {joint.motor_id: joint.model_name for joint in ALL_MOTORS}
+FOOT_ROLL_PAIR_IDS = ((5, 6, 1.0), (11, 12, -1.0))
 
 
 @dataclass(frozen=True)
@@ -150,11 +151,21 @@ def _check(model):
         raise ValueError(f"robot model {model.name}: policy joint order differs from the motor order of POLICY_JOINT_ORDER")
     if not set(model.passive_joints).isdisjoint(model.names_by_id.values()):
         raise ValueError(f"robot model {model.name}: a passive joint carries a motor name")
+    if len(set(model.passive_joints)) != len(model.passive_joints) or len(model.passive_joints) != len(
+        PASSIVE_CLOSED_LOOP_JOINTS
+    ):
+        raise ValueError(f"robot model {model.name}: passive joints are missing or repeated")
     if model.foot_roll is not None and any(
         upper not in names or lower not in names for upper, lower, _ in model.foot_roll.pairs
     ):
         raise ValueError(f"robot model {model.name}: foot-roll pair names an unknown joint")
+    if model.foot_roll is not None and tuple(
+        (model.motor_id_for(upper), model.motor_id_for(lower), sign) for upper, lower, sign in model.foot_roll.pairs
+    ) != FOOT_ROLL_PAIR_IDS:
+        raise ValueError(f"robot model {model.name}: foot-roll pairs are not the ankle motors {FOOT_ROLL_PAIR_IDS}")
     auxiliary = {model.names_by_id[joint.motor_id] for joint in AUXILIARY_JOINTS}
+    if model.hold_joint_pos and set(model.hold_joint_pos) != auxiliary:
+        raise ValueError(f"robot model {model.name}: hold targets must cover every auxiliary motor or none")
     for name, target in model.hold_joint_pos.items():
         if name not in auxiliary:
             raise ValueError(f"robot model {model.name}: hold target for {name} is not an auxiliary motor")
@@ -166,6 +177,8 @@ def _check(model):
             raise ValueError(f"robot model {model.name}: default pose of {name} is outside its limits")
     if not set(model.stop_limits) <= names:
         raise ValueError(f"robot model {model.name} gives a stop limit for an unknown joint")
+    if model.stop_limits and set(model.stop_limits) != names:
+        raise ValueError(f"robot model {model.name}: stop limits do not cover every actuated joint")
     for name, (lower, upper) in model.stop_limits.items():
         if not lower < model.default_joint_pos[name] < upper:
             raise ValueError(f"robot model {model.name}: default pose of {name} is outside its stop limit")
@@ -202,6 +215,16 @@ for _model in VER3_MODELS.values():
     _check(_model)
     if _model.motor_ids != VARIANT_MOTOR_IDS["ver2"] or _model.leg_profile != _model.name:
         raise ValueError(f"robot model {_model.name}: motor set or leg profile is not the ver2 layout")
+    if (
+        _model.joint_limits_by_id(), _model.stop_limits_by_id(),
+        {_model.motor_id_for(name): value for name, value in _model.default_joint_pos.items()},
+        _model.foot_roll.limit, _model.foot_roll.coeffs,
+    ) != (
+        VER2_EDU.joint_limits_by_id(), VER2_EDU.stop_limits_by_id(),
+        {VER2_EDU.motor_id_for(name): value for name, value in VER2_EDU.default_joint_pos.items()},
+        VER2_EDU.foot_roll.limit, VER2_EDU.foot_roll.coeffs,
+    ):
+        raise ValueError(f"robot model {_model.name}: leg values differ from ver2_edu by motor ID")
 for _name in ACTION_POSES:
     for _model in (*VARIANTS.values(), *VER3_MODELS.values()):
         _check(replace(_model, name=f"{_model.name}:{_name}", default_joint_pos=action_pose(_model.name, _name)))

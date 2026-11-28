@@ -53,7 +53,7 @@ robonex-common/
 | `21`–`25` | `right_shoulder_pitch`, `right_shoulder_roll`, `right_shoulder_yaw`, `right_elbow`, `right_wrist_yaw` | `right_arm` | rs02, rs10p, rs00, rs00, rs05 | `can3` |
 | `26`–`27` | `neck_yaw`, `neck_pitch` (`28` reserved) | `head` | rs05 | `can4` |
 
-Robot model `ver2` (all IDs above; an identity file that still says `ver2_edu` is read as `ver2`) and, from 2.6.0, `ver3`: the same motors and values with G1-format names (`left_`/`right_`, `wrist_roll`), `robot_model("ver3")`. Head pitch ±73°, shoulder pitch (16, 21) ±100°; the other arm and neck-yaw limits (±45° / ±30°) are PLACEHOLDERs until measured. Policies keep the leg profile `ver2_edu` (`ROBOT_MODELS`); head/arm gains are placeholders.
+Robot model `ver2` (all IDs above; an identity file that still says `ver2_edu` is read as `ver2`) and, from 2.6.0, `ver3`: the same motors and values with G1-format names (`left_`/`right_`, `wrist_roll`), `robot_model("ver3")`. Head pitch ±73°, shoulder pitch (16, 21) ±100°, the other arm limits ±45° and neck yaw ±30° are all PLACEHOLDERs until measured (from 2.7.0 `limit_status(id)` says so for IDs 16-27, and `require_placeholder_consent(ids, allowed)` is the one consent rule: moving any of them needs `--allow-placeholder-limits`). Policies keep the leg profile `ver2_edu` (`ROBOT_MODELS`); head/arm gains are placeholders.
 
 <br>
 

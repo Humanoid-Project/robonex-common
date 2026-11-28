@@ -57,3 +57,14 @@ def git_commit(path):
         capture_output=True,
         text=True,
     ).stdout.strip()
+
+
+def git_dirty(path):
+    return bool(
+        subprocess.run(
+            ["git", "-C", str(path), "status", "--porcelain", "--untracked-files=no"],
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+    )

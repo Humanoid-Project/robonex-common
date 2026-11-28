@@ -1,5 +1,6 @@
 import hashlib
 import json
+import math
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from pathlib import Path
@@ -11,6 +12,27 @@ from .models import robot_model
 ACTION_CONTRACT_TOLERANCE_RAD = 1.0e-9
 SUPPORTED_SCHEMAS = (3,)
 CURRENT_SCHEMA = 3
+
+
+def parse_observation_terms(terms):
+    term_sizes = []
+    history_length = None
+    for entry in terms:
+        name, _, spec = str(entry).partition(":")
+        size, _, history = spec.partition("x")
+        try:
+            size = int(size)
+            history = int(history) if history else 1
+        except ValueError as error:
+            raise ValueError(f"malformed observation term: {entry!r}") from error
+        if not name or size < 1 or history < 1:
+            raise ValueError(f"malformed observation term: {entry!r}")
+        if history_length is None:
+            history_length = history
+        elif history_length != history:
+            raise ValueError("every observation term must share one history length")
+        term_sizes.append((name, size))
+    return tuple(term_sizes), history_length or 1
 
 
 @dataclass(frozen=True)
@@ -97,6 +119,17 @@ class PolicyContract:
     def validate(self):
         if self.schema_version not in SUPPORTED_SCHEMAS:
             raise ValueError(f"unsupported policy manifest schema: {self.schema_version}")
+        numbers = (
+            *self.action_offsets,
+            *self.action_scales,
+            *(bound for bounds in self.target_clips for bound in bounds),
+            self.runner_action_clip,
+            self.policy_hz,
+            self.foot_roll_limit,
+            *self.foot_roll_coeffs,
+        )
+        if not all(math.isfinite(value) for value in numbers):
+            raise ValueError("policy manifest contains a non-finite number (NaN or infinity)")
         model = robot_model(self.robot_model)
         expected_roll = model.foot_roll
         actual_roll = (self.foot_roll_limit, tuple(self.foot_roll_coeffs), tuple(tuple(p) for p in self.foot_roll_pairs))
@@ -118,11 +151,11 @@ class PolicyContract:
             raise ValueError("action_size and joint_order length differ")
         if len(set(self.joint_order)) != len(self.joint_order):
             raise ValueError("joint_order contains duplicates")
+        if any(name in model.passive_joints for name in self.joint_order):
+            raise ValueError("policy must not target passive closed-loop joints")
         actuated = {model.names_by_id[motor_id] for motor_id in JOINT_BY_ID}
         if any(name not in actuated for name in self.joint_order):
             raise ValueError("joint_order contains an unknown or passive joint")
-        if any(name in model.passive_joints for name in self.joint_order):
-            raise ValueError("policy must not target passive closed-loop joints")
         if tuple(self.joint_order) != tuple(model.policy_joint_order):
             raise ValueError(
                 "joint_order must match POLICY_JOINT_ORDER exactly; "
@@ -142,6 +175,13 @@ class PolicyContract:
             raise ValueError("observation_size must be positive")
         if not self.task or not self.description_model or not self.observation_terms:
             raise ValueError("task, description_model, and observation_terms are required")
+        term_sizes, history_length = parse_observation_terms(self.observation_terms)
+        declared = sum(size for _, size in term_sizes) * history_length
+        if declared != self.observation_size:
+            raise ValueError(
+                f"observation_terms sum to {declared} but the manifest "
+                f"declares observation_size={self.observation_size}"
+            )
         offsets, scales, clips = action_normalization(model=self.robot_model, pose=self.action_pose)
         for index, name in enumerate(self.joint_order):
             expected = (offsets[name], scales[name], clips[name][0], clips[name][1])

@@ -4,6 +4,7 @@ except ImportError:  # pragma: no cover
     raise ImportError("numpy is required; install robonex-common[policy]")
 
 from .foot_roll import clip_foot_roll
+from .policy import parse_observation_terms
 
 OBSERVATION_TERM_SIZES = (
     ("joint_pos_rel", 12),
@@ -66,22 +67,8 @@ class ObservationHistory:
 
         Each entry of ``observation_terms`` is ``name:size`` or ``name:sizexhistory``.
         """
-        term_sizes = []
-        history_length = None
-        for entry in contract.observation_terms:
-            name, _, spec = str(entry).partition(":")
-            size, _, history = spec.partition("x")
-            try:
-                size = int(size)
-                history = int(history) if history else 1
-            except ValueError as error:
-                raise ValueError(f"malformed observation term: {entry!r}") from error
-            if history_length is None:
-                history_length = history
-            elif history_length != history:
-                raise ValueError("every observation term must share one history length")
-            term_sizes.append((name, size))
-        layout = cls(term_sizes, history_length or 1)
+        term_sizes, history_length = parse_observation_terms(contract.observation_terms)
+        layout = cls(term_sizes, history_length)
         if layout.expected_size != int(contract.observation_size):
             raise ValueError(
                 f"observation_terms sum to {layout.expected_size} but the manifest "
@@ -129,14 +116,17 @@ class ObservationHistory:
 
 
 GAIT_PERIOD_S = 0.8
+GAIT_COMMAND_DEADBAND = 0.05
 
 
-def gait_phase_at(step_index, period=GAIT_PERIOD_S, step_dt=1.0 / 50.0):
+def gait_phase_at(step_index, period=GAIT_PERIOD_S, step_dt=1.0 / 50.0, command=None, deadband=GAIT_COMMAND_DEADBAND):
     """The (sin, cos) gait clock the policy was trained against.
 
     It is derived from the controller's own step counter, so it needs no sensor.
     Reset the counter whenever the observation history is reset.
     """
+    if command is not None and not float(np.linalg.norm(np.asarray(command, dtype=np.float64))) > deadband:
+        return np.zeros(2, dtype=np.float32)
     phase = (float(step_index) * step_dt) % period / period
     angle = 2.0 * np.pi * phase
     return np.array([np.sin(angle), np.cos(angle)], dtype=np.float32)

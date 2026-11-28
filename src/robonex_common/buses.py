@@ -20,19 +20,28 @@ def bus_map_path():
     return Path(configured).expanduser() if configured else BUS_MAP_FILE
 
 
+class BusMapError(ValueError):
+    pass
+
+
 @lru_cache(maxsize=None)
 def bus_map():
     mapping = dict(DEFAULT_BUS_MAP)
     path = bus_map_path()
     if path.is_file():
-        with open(path, "r", encoding="utf-8") as handle:
-            loaded = json.load(handle)
+        try:
+            with open(path, "r", encoding="utf-8") as handle:
+                loaded = json.load(handle)
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
+            raise BusMapError(f"{path}: cannot read the bus map ({error})") from None
+        if not isinstance(loaded, dict):
+            raise BusMapError(f"{path}: the bus map must be a JSON object of group -> channel")
         unknown = set(loaded) - set(GROUPS)
         if unknown:
-            raise ValueError(f"{path}: unknown motor groups {sorted(unknown)}; known: {GROUPS}")
+            raise BusMapError(f"{path}: unknown motor groups {sorted(unknown)}; known: {GROUPS}")
         for group, channel in loaded.items():
-            if not isinstance(channel, str) or not channel:
-                raise ValueError(f"{path}: channel for {group} must be a non-empty string")
+            if not isinstance(channel, str) or not channel.strip():
+                raise BusMapError(f"{path}: channel for {group} must be a non-empty string")
             mapping[group] = channel
     return mapping
 

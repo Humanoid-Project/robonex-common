@@ -76,7 +76,7 @@ def parse_arbitration_id(arbitration_id):
 
 
 FAULT_BIT_NAMES = {
-    0: "Overtemperature (>145C)",
+    0: "Overtemperature (>135C RS02/RS05, >145C RS00/RS03/RS10P)",
     1: "Driver chip fault",
     2: "Undervoltage (<12V)",
     3: "Overvoltage (>60V)",
@@ -90,5 +90,11 @@ FAULT_BIT_NAMES = {
 }
 
 
-def decode_fault_bits(value):
-    return [name for bit, name in FAULT_BIT_NAMES.items() if value & (1 << bit)]
+OVERTEMP_FAULT_C = {"rs00": 145, "rs02": 135, "rs03": 145, "rs05": 135, "rs10p": 145}
+
+
+def decode_fault_bits(value, motor_model=None):
+    names = dict(FAULT_BIT_NAMES)
+    if motor_model is not None:
+        names[0] = f"Overtemperature (>{OVERTEMP_FAULT_C[motor_model]}C)"
+    return [name for bit, name in names.items() if value & (1 << bit)]

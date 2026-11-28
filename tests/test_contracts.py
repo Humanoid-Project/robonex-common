@@ -135,7 +135,7 @@ def test_policy_contract_rejects_passive_joint(tmp_path):
         "training_sha256": "3" * 64,
         "description_model": "ver2/mujoco/robot/edu/scene_fixed.xml",
         "joint_order": ["l_knee_joint"],
-        "observation_terms": ["joint_pos"],
+        "observation_terms": ["joint_pos:42"],
         "action_offsets": [0.0],
         "action_scales": [1.0],
         "target_clips": [[-1.0, 1.0]],
@@ -150,7 +150,7 @@ def test_policy_contract_rejects_passive_joint(tmp_path):
     }
     path = tmp_path / "manifest.json"
     path.write_text(json.dumps(payload), encoding="utf-8")
-    with pytest.raises(ValueError, match="unknown or passive joint"):
+    with pytest.raises(ValueError, match="passive closed-loop"):
         PolicyContract.load(path)
 
 
@@ -173,7 +173,7 @@ def _manifest_payload_for(joint_order):
         "training_sha256": "3" * 64,
         "description_model": "ver2/mujoco/robot/edu/scene_fixed.xml",
         "joint_order": list(joint_order),
-        "observation_terms": ["joint_pos"],
+        "observation_terms": ["joint_pos:42"],
         "action_offsets": [offsets[name] for name in joint_order],
         "action_scales": [scales[name] for name in joint_order],
         "target_clips": [list(clips[name]) for name in joint_order],
